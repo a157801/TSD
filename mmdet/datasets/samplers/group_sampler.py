@@ -1,5 +1,4 @@
 from __future__ import division
-
 import math
 
 import numpy as np
@@ -9,6 +8,7 @@ from torch.utils.data import Sampler
 
 
 class GroupSampler(Sampler):
+
     def __init__(self, dataset, samples_per_gpu=1):
         assert hasattr(dataset, 'flag')
         self.dataset = dataset
@@ -62,6 +62,7 @@ class DistributedGroupSampler(Sampler):
             distributed training.
         rank (optional): Rank of the current process within num_replicas.
     """
+
     def __init__(self,
                  dataset,
                  samples_per_gpu=1,
@@ -116,8 +117,8 @@ class DistributedGroupSampler(Sampler):
 
         indices = [
             indices[j] for i in list(
-                torch.randperm(len(indices) // self.samples_per_gpu,
-                               generator=g))
+                torch.randperm(
+                    len(indices) // self.samples_per_gpu, generator=g))
             for j in range(i * self.samples_per_gpu, (i + 1) *
                            self.samples_per_gpu)
         ]

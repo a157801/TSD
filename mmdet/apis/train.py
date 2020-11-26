@@ -75,9 +75,8 @@ def batch_processor(model, data, train_mode):
     losses = model(**data)
     loss, log_vars = parse_losses(losses)
 
-    outputs = dict(loss=loss,
-                   log_vars=log_vars,
-                   num_samples=len(data['img'].data))
+    outputs = dict(
+        loss=loss, log_vars=log_vars, num_samples=len(data['img'].data))
 
     return outputs
 
@@ -118,26 +117,26 @@ def train_detector(model,
             broadcast_buffers=False,
             find_unused_parameters=find_unused_parameters)
     else:
-        model = MMDataParallel(model.cuda(cfg.gpu_ids[0]),
-                               device_ids=cfg.gpu_ids)
+        model = MMDataParallel(
+            model.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 
     # build runner
     optimizer = build_optimizer(model, cfg.optimizer)
-    runner = Runner(model,
-                    batch_processor,
-                    optimizer,
-                    cfg.work_dir,
-                    logger=logger,
-                    meta=meta)
+    runner = Runner(
+        model,
+        batch_processor,
+        optimizer,
+        cfg.work_dir,
+        logger=logger,
+        meta=meta)
     # an ugly walkaround to make the .log and .log.json filenames the same
     runner.timestamp = timestamp
 
     # fp16 setting
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
-        optimizer_config = Fp16OptimizerHook(**cfg.optimizer_config,
-                                             **fp16_cfg,
-                                             distributed=distributed)
+        optimizer_config = Fp16OptimizerHook(
+            **cfg.optimizer_config, **fp16_cfg, distributed=distributed)
     elif distributed:
         optimizer_config = DistOptimizerHook(**cfg.optimizer_config)
     else:

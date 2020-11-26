@@ -10,6 +10,7 @@ from . import masked_conv2d_cuda
 
 
 class MaskedConv2dFunction(Function):
+
     @staticmethod
     def forward(ctx, features, mask, weight, bias, padding=0, stride=1):
         assert mask.dim() == 3 and mask.size(0) == 1
@@ -66,6 +67,7 @@ class MaskedConv2d(nn.Conv2d):
     The masked forward doesn't implement the backward function and only
     supports the stride parameter to be 1 currently.
     """
+
     def __init__(self,
                  in_channels,
                  out_channels,

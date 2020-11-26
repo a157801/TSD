@@ -8,6 +8,7 @@ from . import deform_pool_cuda
 
 
 class DeformRoIPoolingFunction(Function):
+
     @staticmethod
     def forward(ctx,
                 data,
@@ -79,6 +80,7 @@ deform_roi_pooling = DeformRoIPoolingFunction.apply
 
 
 class DeformRoIPooling(nn.Module):
+
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -109,6 +111,7 @@ class DeformRoIPooling(nn.Module):
 
 
 class DeformRoIPoolingPack(DeformRoIPooling):
+
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -172,6 +175,7 @@ class DeformRoIPoolingPack(DeformRoIPooling):
 
 
 class ModulatedDeformRoIPoolingPack(DeformRoIPooling):
+
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -255,6 +259,7 @@ class ModulatedDeformRoIPoolingPack(DeformRoIPooling):
 
 
 class DeltaRPooling(DeformRoIPooling):
+
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -298,6 +303,7 @@ class DeltaRPooling(DeformRoIPooling):
 
 
 class DeltaCPooling(DeformRoIPooling):
+
     def __init__(self,
                  spatial_scale,
                  out_size,

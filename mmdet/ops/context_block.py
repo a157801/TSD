@@ -11,6 +11,7 @@ def last_zero_init(m):
 
 
 class ContextBlock(nn.Module):
+
     def __init__(self,
                  inplanes,
                  ratio,

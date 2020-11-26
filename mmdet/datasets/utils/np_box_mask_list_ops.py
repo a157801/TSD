@@ -131,9 +131,8 @@ def gather(box_mask_list, indices, fields=None):
         if 'masks' not in fields:
             fields.append('masks')
     return box_list_to_box_mask_list(
-        np_box_list_ops.gather(boxlist=box_mask_list,
-                               indices=indices,
-                               fields=fields))
+        np_box_list_ops.gather(
+            boxlist=box_mask_list, indices=indices, fields=fields))
 
 
 def sort_by_field(box_mask_list,
@@ -153,9 +152,8 @@ def sort_by_field(box_mask_list,
       order.
   """
     return box_list_to_box_mask_list(
-        np_box_list_ops.sort_by_field(boxlist=box_mask_list,
-                                      field=field,
-                                      order=order))
+        np_box_list_ops.sort_by_field(
+            boxlist=box_mask_list, field=field, order=order))
 
 
 def non_max_suppression(box_mask_list,
@@ -299,10 +297,11 @@ def multi_class_non_max_suppression(box_mask_list, score_thresh, iou_thresh,
         box_mask_list_and_class_scores.add_field('scores', class_scores)
         box_mask_list_filt = filter_scores_greater_than(
             box_mask_list_and_class_scores, score_thresh)
-        nms_result = non_max_suppression(box_mask_list_filt,
-                                         max_output_size=max_output_size,
-                                         iou_threshold=iou_thresh,
-                                         score_threshold=score_thresh)
+        nms_result = non_max_suppression(
+            box_mask_list_filt,
+            max_output_size=max_output_size,
+            iou_threshold=iou_thresh,
+            score_threshold=score_thresh)
         nms_result.add_field(
             'classes',
             np.zeros_like(nms_result.get_field('scores')) + class_idx)
@@ -332,8 +331,8 @@ def prune_non_overlapping_masks(box_mask_list1,
   """
     intersection_over_area = ioa(box_mask_list2,
                                  box_mask_list1)  # [M, N] tensor
-    intersection_over_area = np.amax(intersection_over_area,
-                                     axis=0)  # [N] tensor
+    intersection_over_area = np.amax(
+        intersection_over_area, axis=0)  # [N] tensor
     keep_bool = np.greater_equal(intersection_over_area, np.array(minoverlap))
     keep_inds = np.nonzero(keep_bool)[0]
     new_box_mask_list1 = gather(box_mask_list1, keep_inds)
@@ -397,6 +396,6 @@ def filter_scores_greater_than(box_mask_list, thresh):
     if len(scores.shape) == 2 and scores.shape[1] != 1:
         raise ValueError('Scores should have rank 1 or have shape '
                          'consistent with [None, 1]')
-    high_score_indices = np.reshape(np.where(np.greater(scores, thresh)),
-                                    [-1]).astype(np.int32)
+    high_score_indices = np.reshape(
+        np.where(np.greater(scores, thresh)), [-1]).astype(np.int32)
     return gather(box_mask_list, high_score_indices)

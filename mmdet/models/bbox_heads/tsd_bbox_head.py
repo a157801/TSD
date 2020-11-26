@@ -5,7 +5,6 @@ import torch.nn as nn
 from mmdet.core import (auto_fp16, bbox_target_tsd, delta2bbox, force_fp32,
                         multiclass_nms)
 from mmdet.ops import ConvModule, DeltaCPooling, DeltaRPooling
-
 from ..losses import accuracy
 from ..registry import HEADS
 from .bbox_head import BBoxHead
@@ -62,29 +61,31 @@ class TSDConvFCBBoxHead(BBoxHead):
         self.shared_fc = nn.Sequential(
             nn.Linear(self.roi_feat_area * self.in_channels, 256),
             nn.ReLU(inplace=True))
-        self.delta_c = nn.Sequential(nn.Linear(256, 256),
-                                     nn.ReLU(inplace=True),
-                                     nn.Linear(256, self.roi_feat_area * 2))
-        self.delta_r = nn.Sequential(nn.Linear(256, 256),
-                                     nn.ReLU(inplace=True), nn.Linear(256, 2))
+        self.delta_c = nn.Sequential(
+            nn.Linear(256, 256), nn.ReLU(inplace=True),
+            nn.Linear(256, self.roi_feat_area * 2))
+        self.delta_r = nn.Sequential(
+            nn.Linear(256, 256), nn.ReLU(inplace=True), nn.Linear(256, 2))
 
         # add AplignPool for Pc and Pr
         self.pool_size = int(np.sqrt(self.roi_feat_area))
         self.align_pooling_pc = nn.ModuleList([
-            DeltaCPooling(spatial_scale=1.0 / x,
-                          out_size=self.pool_size,
-                          out_channels=self.in_channels,
-                          no_trans=False,
-                          group_size=1,
-                          trans_std=0.1) for x in featmap_strides
+            DeltaCPooling(
+                spatial_scale=1.0 / x,
+                out_size=self.pool_size,
+                out_channels=self.in_channels,
+                no_trans=False,
+                group_size=1,
+                trans_std=0.1) for x in featmap_strides
         ])
         self.align_pooling_pr = nn.ModuleList([
-            DeltaRPooling(spatial_scale=1.0 / x,
-                          out_size=self.pool_size,
-                          out_channels=self.in_channels,
-                          no_trans=False,
-                          group_size=1,
-                          trans_std=0.1) for x in featmap_strides
+            DeltaRPooling(
+                spatial_scale=1.0 / x,
+                out_size=self.pool_size,
+                out_channels=self.in_channels,
+                no_trans=False,
+                group_size=1,
+                trans_std=0.1) for x in featmap_strides
         ])
 
         # add shared convs and fcs
@@ -157,15 +158,16 @@ class TSDConvFCBBoxHead(BBoxHead):
         branch_convs = nn.ModuleList()
         if num_branch_convs > 0:
             for i in range(num_branch_convs):
-                conv_in_channels = (last_layer_dim
-                                    if i == 0 else self.conv_out_channels)
+                conv_in_channels = (
+                    last_layer_dim if i == 0 else self.conv_out_channels)
                 branch_convs.append(
-                    ConvModule(conv_in_channels,
-                               self.conv_out_channels,
-                               3,
-                               padding=1,
-                               conv_cfg=self.conv_cfg,
-                               norm_cfg=self.norm_cfg))
+                    ConvModule(
+                        conv_in_channels,
+                        self.conv_out_channels,
+                        3,
+                        padding=1,
+                        conv_cfg=self.conv_cfg,
+                        norm_cfg=self.norm_cfg))
             last_layer_dim = self.conv_out_channels
         # add branch specific fc layers
         branch_fcs = nn.ModuleList()
@@ -176,8 +178,8 @@ class TSDConvFCBBoxHead(BBoxHead):
                     or self.num_shared_fcs == 0) and not self.with_avg_pool:
                 last_layer_dim *= self.roi_feat_area
             for i in range(num_branch_fcs):
-                fc_in_channels = (last_layer_dim
-                                  if i == 0 else self.fc_out_channels)
+                fc_in_channels = (
+                    last_layer_dim if i == 0 else self.fc_out_channels)
                 branch_fcs.append(
                     nn.Linear(fc_in_channels, self.fc_out_channels))
             last_layer_dim = self.fc_out_channels
@@ -238,10 +240,10 @@ class TSDConvFCBBoxHead(BBoxHead):
         delta_r = self.delta_r(x2)
         num_levels = len(feats)
         target_lvls = self.map_roi_levels(rois, num_levels)
-        TSD_cls_feats = x.new_zeros(rois.size(0), self.in_channels,
-                                    self.pool_size, self.pool_size)
-        TSD_loc_feats = x.new_zeros(rois.size(0), self.in_channels,
-                                    self.pool_size, self.pool_size)
+        TSD_cls_feats = x.new_zeros(
+            rois.size(0), self.in_channels, self.pool_size, self.pool_size)
+        TSD_loc_feats = x.new_zeros(
+            rois.size(0), self.in_channels, self.pool_size, self.pool_size)
         for i in range(num_levels):
             inds = target_lvls == i
             if inds.any():
@@ -340,8 +342,9 @@ class TSDConvFCBBoxHead(BBoxHead):
         else:
             return None, None, TSD_cls_score, TSD_bbox_pred, delta_c, delta_r
 
-    @force_fp32(apply_to=('delta_c', 'delta_r', 'TSD_cls_score',
-                          'TSD_bbox_pred', 'cls_score', 'bbox_pred'))
+    @force_fp32(
+        apply_to=('delta_c', 'delta_r', 'TSD_cls_score', 'TSD_bbox_pred',
+                  'cls_score', 'bbox_pred'))
     def get_target(self, rois, sampling_results, gt_bboxes, gt_labels, delta_c,
                    delta_r, cls_score, bbox_pred, TSD_cls_score, TSD_bbox_pred,
                    rcnn_train_cfg, img_metas):
@@ -380,27 +383,29 @@ class TSDConvFCBBoxHead(BBoxHead):
             for i in range(len(sampling_results))
         ]
 
-        cls_reg_targets = bbox_target_tsd(pos_proposals,
-                                          neg_proposals,
-                                          pos_gt_bboxes,
-                                          pos_gt_labels,
-                                          rois_,
-                                          delta_c_,
-                                          delta_r_,
-                                          cls_score_,
-                                          bbox_pred_,
-                                          TSD_cls_score_,
-                                          TSD_bbox_pred_,
-                                          rcnn_train_cfg,
-                                          reg_classes,
-                                          cls_pc_margin=self.cls_pc_margin,
-                                          loc_pc_margin=self.loc_pc_margin,
-                                          target_means=self.target_means,
-                                          target_stds=self.target_stds)
+        cls_reg_targets = bbox_target_tsd(
+            pos_proposals,
+            neg_proposals,
+            pos_gt_bboxes,
+            pos_gt_labels,
+            rois_,
+            delta_c_,
+            delta_r_,
+            cls_score_,
+            bbox_pred_,
+            TSD_cls_score_,
+            TSD_bbox_pred_,
+            rcnn_train_cfg,
+            reg_classes,
+            cls_pc_margin=self.cls_pc_margin,
+            loc_pc_margin=self.loc_pc_margin,
+            target_means=self.target_means,
+            target_stds=self.target_stds)
         return cls_reg_targets
 
-    @force_fp32(apply_to=('cls_score', 'bbox_pred', 'TSD_cls_score',
-                          'TSD_bbox_pred', 'pc_cls_loss', 'pc_loc_loss'))
+    @force_fp32(
+        apply_to=('cls_score', 'bbox_pred', 'TSD_cls_score', 'TSD_bbox_pred',
+                  'pc_cls_loss', 'pc_loc_loss'))
     def loss(self,
              cls_score,
              bbox_pred,
@@ -484,15 +489,16 @@ class TSDConvFCBBoxHead(BBoxHead):
 
 @HEADS.register_module
 class TSDSharedFCBBoxHead(TSDConvFCBBoxHead):
+
     def __init__(self, num_fcs=2, fc_out_channels=1024, *args, **kwargs):
         assert num_fcs >= 1
-        super(TSDSharedFCBBoxHead,
-              self).__init__(num_shared_convs=0,
-                             num_shared_fcs=num_fcs,
-                             num_cls_convs=0,
-                             num_cls_fcs=0,
-                             num_reg_convs=0,
-                             num_reg_fcs=0,
-                             fc_out_channels=fc_out_channels,
-                             *args,
-                             **kwargs)
+        super(TSDSharedFCBBoxHead, self).__init__(
+            num_shared_convs=0,
+            num_shared_fcs=num_fcs,
+            num_cls_convs=0,
+            num_cls_fcs=0,
+            num_reg_convs=0,
+            num_reg_fcs=0,
+            fc_out_channels=fc_out_channels,
+            *args,
+            **kwargs)

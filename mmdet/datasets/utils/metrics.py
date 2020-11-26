@@ -61,8 +61,8 @@ def compute_precision_recall(scores, labels, num_gt):
     false_positive_labels = (true_positive_labels <= 0).astype(float)
     cum_true_positives = np.cumsum(true_positive_labels)
     cum_false_positives = np.cumsum(false_positive_labels)
-    precision = cum_true_positives.astype(float) / (cum_true_positives +
-                                                    cum_false_positives)
+    precision = cum_true_positives.astype(float) / (
+        cum_true_positives + cum_false_positives)
     recall = cum_true_positives.astype(float) / num_gt
     return precision, recall
 

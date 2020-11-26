@@ -17,6 +17,7 @@ class ATSSAssigner(BaseAssigner):
     Args:
         topk (float): number of bbox selected in each level
     """
+
     def __init__(self, topk):
         self.topk = topk
 
@@ -78,10 +79,8 @@ class ATSSAssigner(BaseAssigner):
             else:
                 assigned_labels = overlaps.new_zeros((num_bboxes, ),
                                                      dtype=torch.long)
-            return AssignResult(num_gt,
-                                assigned_gt_inds,
-                                max_overlaps,
-                                labels=assigned_labels)
+            return AssignResult(
+                num_gt, assigned_gt_inds, max_overlaps, labels=assigned_labels)
 
         # compute center distance between all bbox and gt
         gt_cx = (gt_bboxes[:, 0] + gt_bboxes[:, 2]) / 2.0
@@ -103,9 +102,8 @@ class ATSSAssigner(BaseAssigner):
             # select k bbox whose center are closest to the gt center
             end_idx = start_idx + bboxes_per_level
             distances_per_level = distances[start_idx:end_idx, :]
-            _, topk_idxs_per_level = distances_per_level.topk(self.topk,
-                                                              dim=0,
-                                                              largest=False)
+            _, topk_idxs_per_level = distances_per_level.topk(
+                self.topk, dim=0, largest=False)
             candidate_idxs.append(topk_idxs_per_level + start_idx)
             start_idx = end_idx
         candidate_idxs = torch.cat(candidate_idxs, dim=0)
@@ -157,7 +155,5 @@ class ATSSAssigner(BaseAssigner):
                     assigned_gt_inds[pos_inds] - 1]
         else:
             assigned_labels = None
-        return AssignResult(num_gt,
-                            assigned_gt_inds,
-                            max_overlaps,
-                            labels=assigned_labels)
+        return AssignResult(
+            num_gt, assigned_gt_inds, max_overlaps, labels=assigned_labels)

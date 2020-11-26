@@ -24,9 +24,8 @@ def read_gts(label_dir, gt_need_father=True):
                              'challenge-2019-validation-detection-bbox.txt')
     print('\tGet gts: {0} ...'.format(file_name))
     if gt_need_father:
-        class_label_tree = np.load(os.path.join(label_dir,
-                                                'class_label_tree.np'),
-                                   allow_pickle=True)
+        class_label_tree = np.load(
+            os.path.join(label_dir, 'class_label_tree.np'), allow_pickle=True)
     st = time.time()
     gts = {}
     with open(file_name) as f:
@@ -71,12 +70,12 @@ def read_gts(label_dir, gt_need_father=True):
         i += img_gt_size
 
         gts[img_name] = {}
-        gts[img_name]['groundtruth_boxes'] = np.array(gt_boxes,
-                                                      dtype=np.float32)
+        gts[img_name]['groundtruth_boxes'] = np.array(
+            gt_boxes, dtype=np.float32)
         gts[img_name]['groundtruth_classes'] = np.array(labels, dtype=np.int32)
         gts[img_name]['verified_labels'] = np.array(neg_clss, dtype=np.int32)
-        gts[img_name]['groundtruth_group_of'] = np.array(is_group,
-                                                         dtype=np.bool)
+        gts[img_name]['groundtruth_group_of'] = np.array(
+            is_group, dtype=np.bool)
 
     ed = time.time()
     print('\tGts read, using: {:.2f} s'.format(ed - st))
@@ -86,9 +85,8 @@ def read_gts(label_dir, gt_need_father=True):
 def read_dets(file_name, label_dir, det_need_father=True, wh_format=False):
     print('\tGet dets: {0} ...'.format(file_name))
     if det_need_father:
-        class_label_tree = np.load(os.path.join(label_dir,
-                                                'class_label_tree.np'),
-                                   allow_pickle=True)
+        class_label_tree = np.load(
+            os.path.join(label_dir, 'class_label_tree.np'), allow_pickle=True)
     st = time.time()
     dets = {}
     with open(file_name) as f:
@@ -126,12 +124,12 @@ def read_dets(file_name, label_dir, det_need_father=True, wh_format=False):
         dets[img_name]['detection_classes'] += det_cls
 
     for k in dets.keys():
-        dets[k]['detection_boxes'] = np.array(dets[k]['detection_boxes'],
-                                              dtype=np.float32)
-        dets[k]['detection_scores'] = np.array(dets[k]['detection_scores'],
-                                               dtype=np.float32)
-        dets[k]['detection_classes'] = np.array(dets[k]['detection_classes'],
-                                                dtype=np.int32)
+        dets[k]['detection_boxes'] = np.array(
+            dets[k]['detection_boxes'], dtype=np.float32)
+        dets[k]['detection_scores'] = np.array(
+            dets[k]['detection_scores'], dtype=np.float32)
+        dets[k]['detection_classes'] = np.array(
+            dets[k]['detection_classes'], dtype=np.int32)
 
     ed = time.time()
     print('\tDets read, using: {:.2f} s'.format(ed - st))
@@ -226,8 +224,8 @@ class OpenImagesDetectionChallengeEvaluator(object):
         if image_id in self._image_ids:
             raise ValueError(
                 'Image with id {} already added.'.format(image_id))
-        groundtruth_classes = (groundtruth_dict['groundtruth_classes'] -
-                               self._label_id_offset)
+        groundtruth_classes = (
+            groundtruth_dict['groundtruth_classes'] - self._label_id_offset)
         # If the key is not present in the groundtruth_dict or the array is empty
         # (unless there are no annotations for the groundtruth on this image)
         # use values from the dictionary or insert None otherwise.
@@ -252,8 +250,8 @@ class OpenImagesDetectionChallengeEvaluator(object):
 
         self._image_ids.update([image_id])
 
-        groundtruth_classes = (groundtruth_dict['groundtruth_classes'] -
-                               self._label_id_offset)
+        groundtruth_classes = (
+            groundtruth_dict['groundtruth_classes'] - self._label_id_offset)
         # self._evaluatable_labels[image_id] = np.unique(
         #     np.concatenate(((groundtruth_dict.get(
         #         "verified_labels",
@@ -288,8 +286,8 @@ class OpenImagesDetectionChallengeEvaluator(object):
             self._image_ids.update([image_id])
             self._evaluatable_labels[image_id] = np.array([])
 
-        detection_classes = (detections_dict['detection_classes'] -
-                             self._label_id_offset)
+        detection_classes = (
+            detections_dict['detection_classes'] - self._label_id_offset)
         allowed_classes = np.where(
             np.isin(detection_classes, self._evaluatable_labels[image_id]))
         detection_classes = detection_classes[allowed_classes]
@@ -317,8 +315,8 @@ class OpenImagesDetectionChallengeEvaluator(object):
         """
         # (per_class_ap, mean_ap, _, _, per_class_corloc, mean_corloc) = (
         #     self._evaluation.evaluate())
-        (per_class_ap, mean_ap, precision,
-         recall) = (self._evaluation.evaluate())
+        (per_class_ap, mean_ap, precision, recall) = (
+            self._evaluation.evaluate())
         pascal_metrics = {
             self._metric_prefix + 'Precision/mAP@{}IOU'.format(self._matching_iou_threshold):
             mean_ap
@@ -376,6 +374,7 @@ ObjectDetectionEvalMetrics = collections.namedtuple(
 
 class ObjectDetectionEvaluation(object):
     """Internal implementation of Pascal object detection metrics."""
+
     def __init__(self,
                  num_groundtruth_classes,
                  matching_iou_threshold=0.5,
@@ -405,8 +404,8 @@ class ObjectDetectionEvaluation(object):
         self.groundtruth_is_difficult_list = {}
         self.groundtruth_is_group_of_list = {}
         #self.num_gt_instances_per_class = np.zeros(self.num_class, dtype=float)
-        self.num_gt_instances_per_class = np.zeros(self.num_class,
-                                                   dtype=np.int32)
+        self.num_gt_instances_per_class = np.zeros(
+            self.num_class, dtype=np.int32)
         self.num_gt_imgs_per_class = np.zeros(self.num_class, dtype=np.int32)
 
         self._initialize_detections()
@@ -416,8 +415,8 @@ class ObjectDetectionEvaluation(object):
         self.scores_per_class = [[] for _ in range(self.num_class)]
         self.tp_fp_labels_per_class = [[] for _ in range(self.num_class)]
         self.num_images_correctly_detected_per_class = np.zeros(self.num_class)
-        self.average_precision_per_class = np.empty(self.num_class,
-                                                    dtype=float)
+        self.average_precision_per_class = np.empty(
+            self.num_class, dtype=float)
         self.average_precision_per_class.fill(np.nan)
         self.precisions_per_class = []
         self.recalls_per_class = []

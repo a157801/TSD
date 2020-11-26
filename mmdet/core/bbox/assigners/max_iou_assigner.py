@@ -32,6 +32,7 @@ class MaxIoUAssigner(BaseAssigner):
             assign. When the number of gt is above this threshold, will assign
             on CPU device. Negative values mean not assign on CPU.
     """
+
     def __init__(self,
                  pos_iou_thr,
                  neg_iou_thr,
@@ -100,14 +101,12 @@ class MaxIoUAssigner(BaseAssigner):
         if (self.ignore_iof_thr > 0 and gt_bboxes_ignore is not None
                 and gt_bboxes_ignore.numel() > 0 and bboxes.numel() > 0):
             if self.ignore_wrt_candidates:
-                ignore_overlaps = bbox_overlaps(bboxes,
-                                                gt_bboxes_ignore,
-                                                mode='iof')
+                ignore_overlaps = bbox_overlaps(
+                    bboxes, gt_bboxes_ignore, mode='iof')
                 ignore_max_overlaps, _ = ignore_overlaps.max(dim=1)
             else:
-                ignore_overlaps = bbox_overlaps(gt_bboxes_ignore,
-                                                bboxes,
-                                                mode='iof')
+                ignore_overlaps = bbox_overlaps(
+                    gt_bboxes_ignore, bboxes, mode='iof')
                 ignore_max_overlaps, _ = ignore_overlaps.max(dim=0)
             overlaps[:, ignore_max_overlaps > self.ignore_iof_thr] = -1
 
@@ -148,10 +147,11 @@ class MaxIoUAssigner(BaseAssigner):
             else:
                 assigned_labels = overlaps.new_zeros((num_bboxes, ),
                                                      dtype=torch.long)
-            return AssignResult(num_gts,
-                                assigned_gt_inds,
-                                max_overlaps,
-                                labels=assigned_labels)
+            return AssignResult(
+                num_gts,
+                assigned_gt_inds,
+                max_overlaps,
+                labels=assigned_labels)
 
         # for each anchor, which gt best overlaps with it
         # for each anchor, the max iou of all gts
@@ -191,7 +191,5 @@ class MaxIoUAssigner(BaseAssigner):
         else:
             assigned_labels = None
 
-        return AssignResult(num_gts,
-                            assigned_gt_inds,
-                            max_overlaps,
-                            labels=assigned_labels)
+        return AssignResult(
+            num_gts, assigned_gt_inds, max_overlaps, labels=assigned_labels)

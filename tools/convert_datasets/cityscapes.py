@@ -28,9 +28,8 @@ def collect_files(img_dir, gt_dir):
 def collect_annotations(files, nproc=1):
     print('Loading annotation images')
     if nproc > 1:
-        images = mmcv.track_parallel_progress(load_img_info,
-                                              files,
-                                              nproc=nproc)
+        images = mmcv.track_parallel_progress(
+            load_img_info, files, nproc=nproc)
     else:
         images = mmcv.track_progress(load_img_info, files)
 
@@ -63,11 +62,12 @@ def load_img_info(files):
         # for json encoding
         mask_rle['counts'] = mask_rle['counts'].decode()
 
-        anno = dict(iscrowd=iscrowd,
-                    category_id=category_id,
-                    bbox=bbox.tolist(),
-                    area=area.tolist(),
-                    segmentation=mask_rle)
+        anno = dict(
+            iscrowd=iscrowd,
+            category_id=category_id,
+            bbox=bbox.tolist(),
+            area=area.tolist(),
+            segmentation=mask_rle)
         anno_info.append(anno)
     video_name = osp.basename(osp.dirname(img_file))
     img_info = dict(
@@ -117,10 +117,8 @@ def parse_args():
     parser.add_argument('--img_dir', default='leftImg8bit', type=str)
     parser.add_argument('--gt_dir', default='gtFine', type=str)
     parser.add_argument('-o', '--out_dir', help='output path')
-    parser.add_argument('--nproc',
-                        default=1,
-                        type=int,
-                        help='number of process')
+    parser.add_argument(
+        '--nproc', default=1, type=int, help='number of process')
     args = parser.parse_args()
     return args
 
@@ -134,16 +132,17 @@ def main():
     img_dir = osp.join(cityscapes_path, args.img_dir)
     gt_dir = osp.join(cityscapes_path, args.gt_dir)
 
-    set_name = dict(train='instancesonly_filtered_gtFine_train.json',
-                    val='instancesonly_filtered_gtFine_val.json',
-                    test='instancesonly_filtered_gtFine_test.json')
+    set_name = dict(
+        train='instancesonly_filtered_gtFine_train.json',
+        val='instancesonly_filtered_gtFine_val.json',
+        test='instancesonly_filtered_gtFine_test.json')
 
     for split, json_name in set_name.items():
         print('Converting {} into {}'.format(split, json_name))
         with mmcv.Timer(
                 print_tmpl='It tooks {}s to convert Cityscapes annotation'):
-            files = collect_files(osp.join(img_dir, split),
-                                  osp.join(gt_dir, split))
+            files = collect_files(
+                osp.join(img_dir, split), osp.join(gt_dir, split))
             image_infos = collect_annotations(files, nproc=args.nproc)
             cvt_annotations(image_infos, osp.join(out_dir, json_name))
 

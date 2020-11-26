@@ -3,7 +3,6 @@ import torch.nn.functional as F
 from mmcv.cnn import xavier_init
 
 from mmdet.ops import ConvModule, NonLocal2D
-
 from ..registry import NECKS
 
 
@@ -27,6 +26,7 @@ class BFP(nn.Module):
         refine_type (str): Type of the refine op, currently support
             [None, 'conv', 'non_local'].
     """
+
     def __init__(self,
                  in_channels,
                  num_levels,
@@ -47,18 +47,20 @@ class BFP(nn.Module):
         assert 0 <= self.refine_level < self.num_levels
 
         if self.refine_type == 'conv':
-            self.refine = ConvModule(self.in_channels,
-                                     self.in_channels,
-                                     3,
-                                     padding=1,
-                                     conv_cfg=self.conv_cfg,
-                                     norm_cfg=self.norm_cfg)
+            self.refine = ConvModule(
+                self.in_channels,
+                self.in_channels,
+                3,
+                padding=1,
+                conv_cfg=self.conv_cfg,
+                norm_cfg=self.norm_cfg)
         elif self.refine_type == 'non_local':
-            self.refine = NonLocal2D(self.in_channels,
-                                     reduction=1,
-                                     use_scale=False,
-                                     conv_cfg=self.conv_cfg,
-                                     norm_cfg=self.norm_cfg)
+            self.refine = NonLocal2D(
+                self.in_channels,
+                reduction=1,
+                use_scale=False,
+                conv_cfg=self.conv_cfg,
+                norm_cfg=self.norm_cfg)
 
     def init_weights(self):
         for m in self.modules():
@@ -73,12 +75,11 @@ class BFP(nn.Module):
         gather_size = inputs[self.refine_level].size()[2:]
         for i in range(self.num_levels):
             if i < self.refine_level:
-                gathered = F.adaptive_max_pool2d(inputs[i],
-                                                 output_size=gather_size)
+                gathered = F.adaptive_max_pool2d(
+                    inputs[i], output_size=gather_size)
             else:
-                gathered = F.interpolate(inputs[i],
-                                         size=gather_size,
-                                         mode='nearest')
+                gathered = F.interpolate(
+                    inputs[i], size=gather_size, mode='nearest')
             feats.append(gathered)
 
         bsf = sum(feats) / len(feats)

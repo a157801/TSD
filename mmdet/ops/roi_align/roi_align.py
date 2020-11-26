@@ -7,6 +7,7 @@ from . import roi_align_cuda
 
 
 class RoIAlignFunction(Function):
+
     @staticmethod
     def forward(ctx,
                 features,
@@ -76,6 +77,7 @@ roi_align = RoIAlignFunction.apply
 
 
 class RoIAlign(nn.Module):
+
     def __init__(self,
                  out_size,
                  spatial_scale,

@@ -293,10 +293,11 @@ def multi_class_non_max_suppression(boxlist, score_thresh, iou_thresh,
         boxlist_and_class_scores.add_field('scores', class_scores)
         boxlist_filt = filter_scores_greater_than(boxlist_and_class_scores,
                                                   score_thresh)
-        nms_result = non_max_suppression(boxlist_filt,
-                                         max_output_size=max_output_size,
-                                         iou_threshold=iou_thresh,
-                                         score_threshold=score_thresh)
+        nms_result = non_max_suppression(
+            boxlist_filt,
+            max_output_size=max_output_size,
+            iou_threshold=iou_thresh,
+            score_threshold=score_thresh)
         nms_result.add_field(
             'classes',
             np.zeros_like(nms_result.get_field('scores')) + class_idx)
@@ -363,8 +364,8 @@ def clip_to_window(boxlist, window):
                    x_max_clipped]))
     clipped = _copy_extra_fields(clipped, boxlist)
     areas = area(clipped)
-    nonzero_area_indices = np.reshape(np.nonzero(np.greater(areas, 0.0)),
-                                      [-1]).astype(np.int32)
+    nonzero_area_indices = np.reshape(
+        np.nonzero(np.greater(areas, 0.0)), [-1]).astype(np.int32)
     return gather(clipped, nonzero_area_indices)
 
 
@@ -384,8 +385,8 @@ def prune_non_overlapping_boxes(boxlist1, boxlist2, minoverlap=0.0):
     A pruned boxlist with size [N', 4].
   """
     intersection_over_area = ioa(boxlist2, boxlist1)  # [M, N] tensor
-    intersection_over_area = np.amax(intersection_over_area,
-                                     axis=0)  # [N] tensor
+    intersection_over_area = np.amax(
+        intersection_over_area, axis=0)  # [N] tensor
     keep_bool = np.greater_equal(intersection_over_area, np.array(minoverlap))
     keep_inds = np.nonzero(keep_bool)[0]
     new_boxlist1 = gather(boxlist1, keep_inds)
@@ -506,8 +507,8 @@ def filter_scores_greater_than(boxlist, thresh):
     if len(scores.shape) == 2 and scores.shape[1] != 1:
         raise ValueError('Scores should have rank 1 or have shape '
                          'consistent with [None, 1]')
-    high_score_indices = np.reshape(np.where(np.greater(scores, thresh)),
-                                    [-1]).astype(np.int32)
+    high_score_indices = np.reshape(
+        np.where(np.greater(scores, thresh)), [-1]).astype(np.int32)
     return gather(boxlist, high_score_indices)
 
 

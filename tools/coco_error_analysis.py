@@ -32,12 +32,12 @@ def makeplot(rs, ps, outDir, class_name, iou_type):
         ax = plt.subplot(111)
         for k in range(len(types)):
             ax.plot(rs, ps_curve[k + 1], color=[0, 0, 0], linewidth=0.5)
-            ax.fill_between(rs,
-                            ps_curve[k],
-                            ps_curve[k + 1],
-                            color=cs[k],
-                            label=str('[{:.3f}'.format(aps[k]) + ']' +
-                                      types[k]))
+            ax.fill_between(
+                rs,
+                ps_curve[k],
+                ps_curve[k + 1],
+                color=cs[k],
+                label=str('[{:.3f}'.format(aps[k]) + ']' + types[k]))
         plt.xlabel('recall')
         plt.ylabel('precision')
         plt.xlim(0, 1.)
@@ -121,8 +121,8 @@ def analyze_results(res_file, ann_file, res_types, out_dir):
                 '-------------create {}-----------------'.format(res_out_dir))
             os.makedirs(res_directory)
         iou_type = res_type
-        cocoEval = COCOeval(copy.deepcopy(cocoGt), copy.deepcopy(cocoDt),
-                            iou_type)
+        cocoEval = COCOeval(
+            copy.deepcopy(cocoGt), copy.deepcopy(cocoDt), iou_type)
         cocoEval.params.imgIds = imgIds
         cocoEval.params.iouThrs = [.75, .5, .1]
         cocoEval.params.maxDets = [100]
@@ -160,14 +160,12 @@ def main():
     parser = ArgumentParser(description='COCO Error Analysis Tool')
     parser.add_argument('result', help='result file (json format) path')
     parser.add_argument('out_dir', help='dir to save analyze result images')
-    parser.add_argument('--ann',
-                        default='data/coco/annotations/instances_val2017.json',
-                        help='annotation file path')
-    parser.add_argument('--types',
-                        type=str,
-                        nargs='+',
-                        default=['bbox'],
-                        help='result types')
+    parser.add_argument(
+        '--ann',
+        default='data/coco/annotations/instances_val2017.json',
+        help='annotation file path')
+    parser.add_argument(
+        '--types', type=str, nargs='+', default=['bbox'], help='result types')
     args = parser.parse_args()
     analyze_results(args.result, args.ann, args.types, out_dir=args.out_dir)
 

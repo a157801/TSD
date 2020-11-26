@@ -30,6 +30,7 @@ class GeneralizedAttention(nn.Module):
             '0010' indicates 'key content only' (bias - appr) item,
             '0001' indicates 'relative position only' (bias - position) item.
     """
+
     def __init__(self,
                  in_dim,
                  spatial_range=-1,
@@ -43,8 +44,8 @@ class GeneralizedAttention(nn.Module):
         super(GeneralizedAttention, self).__init__()
 
         # hard range means local range for non-local operation
-        self.position_embedding_dim = (position_embedding_dim if
-                                       position_embedding_dim > 0 else in_dim)
+        self.position_embedding_dim = (
+            position_embedding_dim if position_embedding_dim > 0 else in_dim)
 
         self.position_magnitude = position_magnitude
         self.num_heads = num_heads
@@ -57,35 +58,36 @@ class GeneralizedAttention(nn.Module):
         out_c = self.qk_embed_dim * num_heads
 
         if self.attention_type[0] or self.attention_type[1]:
-            self.query_conv = nn.Conv2d(in_channels=in_dim,
-                                        out_channels=out_c,
-                                        kernel_size=1,
-                                        bias=False)
+            self.query_conv = nn.Conv2d(
+                in_channels=in_dim,
+                out_channels=out_c,
+                kernel_size=1,
+                bias=False)
             self.query_conv.kaiming_init = True
 
         if self.attention_type[0] or self.attention_type[2]:
-            self.key_conv = nn.Conv2d(in_channels=in_dim,
-                                      out_channels=out_c,
-                                      kernel_size=1,
-                                      bias=False)
+            self.key_conv = nn.Conv2d(
+                in_channels=in_dim,
+                out_channels=out_c,
+                kernel_size=1,
+                bias=False)
             self.key_conv.kaiming_init = True
 
         self.v_dim = in_dim // num_heads
-        self.value_conv = nn.Conv2d(in_channels=in_dim,
-                                    out_channels=self.v_dim * num_heads,
-                                    kernel_size=1,
-                                    bias=False)
+        self.value_conv = nn.Conv2d(
+            in_channels=in_dim,
+            out_channels=self.v_dim * num_heads,
+            kernel_size=1,
+            bias=False)
         self.value_conv.kaiming_init = True
 
         if self.attention_type[1] or self.attention_type[3]:
-            self.appr_geom_fc_x = nn.Linear(self.position_embedding_dim // 2,
-                                            out_c,
-                                            bias=False)
+            self.appr_geom_fc_x = nn.Linear(
+                self.position_embedding_dim // 2, out_c, bias=False)
             self.appr_geom_fc_x.kaiming_init = True
 
-            self.appr_geom_fc_y = nn.Linear(self.position_embedding_dim // 2,
-                                            out_c,
-                                            bias=False)
+            self.appr_geom_fc_y = nn.Linear(
+                self.position_embedding_dim // 2, out_c, bias=False)
             self.appr_geom_fc_y.kaiming_init = True
 
         if self.attention_type[2]:
@@ -98,10 +100,11 @@ class GeneralizedAttention(nn.Module):
             geom_bias_value = -2 * stdv * torch.rand(out_c) + stdv
             self.geom_bias = nn.Parameter(geom_bias_value)
 
-        self.proj_conv = nn.Conv2d(in_channels=self.v_dim * num_heads,
-                                   out_channels=in_dim,
-                                   kernel_size=1,
-                                   bias=True)
+        self.proj_conv = nn.Conv2d(
+            in_channels=self.v_dim * num_heads,
+            out_channels=in_dim,
+            kernel_size=1,
+            bias=True)
         self.proj_conv.kaiming_init = True
         self.gamma = nn.Parameter(torch.zeros(1))
 
@@ -133,14 +136,14 @@ class GeneralizedAttention(nn.Module):
                 requires_grad=False)
 
         if self.q_stride > 1:
-            self.q_downsample = nn.AvgPool2d(kernel_size=1,
-                                             stride=self.q_stride)
+            self.q_downsample = nn.AvgPool2d(
+                kernel_size=1, stride=self.q_stride)
         else:
             self.q_downsample = None
 
         if self.kv_stride > 1:
-            self.kv_downsample = nn.AvgPool2d(kernel_size=1,
-                                              stride=self.kv_stride)
+            self.kv_downsample = nn.AvgPool2d(
+                kernel_size=1, stride=self.kv_stride)
         else:
             self.kv_downsample = None
 
@@ -248,14 +251,15 @@ class GeneralizedAttention(nn.Module):
         else:
             # (n, num_heads, h*w, h_kv*w_kv), query before key, 540mb for
             if not self.attention_type[0]:
-                energy = torch.zeros(n,
-                                     num_heads,
-                                     h,
-                                     w,
-                                     h_kv,
-                                     w_kv,
-                                     dtype=x_input.dtype,
-                                     device=x_input.device)
+                energy = torch.zeros(
+                    n,
+                    num_heads,
+                    h,
+                    w,
+                    h_kv,
+                    w_kv,
+                    dtype=x_input.dtype,
+                    device=x_input.device)
 
             # attention_type[0]: appr - appr
             # attention_type[1]: appr - position
@@ -370,9 +374,10 @@ class GeneralizedAttention(nn.Module):
     def init_weights(self):
         for m in self.modules():
             if hasattr(m, 'kaiming_init') and m.kaiming_init:
-                kaiming_init(m,
-                             mode='fan_in',
-                             nonlinearity='leaky_relu',
-                             bias=0,
-                             distribution='uniform',
-                             a=1)
+                kaiming_init(
+                    m,
+                    mode='fan_in',
+                    nonlinearity='leaky_relu',
+                    bias=0,
+                    distribution='uniform',
+                    a=1)

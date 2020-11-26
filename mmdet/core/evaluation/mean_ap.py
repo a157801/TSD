@@ -5,7 +5,6 @@ import numpy as np
 from terminaltables import AsciiTable
 
 from mmdet.utils import print_log
-
 from .bbox_overlaps import bbox_overlaps
 from .class_names import get_classes
 
@@ -80,10 +79,9 @@ def tpfp_imagenet(det_bboxes,
             each array is (num_scales, m).
     """
     # an indicator of ignored gts
-    gt_ignore_inds = np.concatenate((np.zeros(gt_bboxes.shape[0],
-                                              dtype=np.bool),
-                                     np.ones(gt_bboxes_ignore.shape[0],
-                                             dtype=np.bool)))
+    gt_ignore_inds = np.concatenate(
+        (np.zeros(gt_bboxes.shape[0], dtype=np.bool),
+         np.ones(gt_bboxes_ignore.shape[0], dtype=np.bool)))
     # stack gt_bboxes and gt_bboxes_ignore for convenience
     gt_bboxes = np.vstack((gt_bboxes, gt_bboxes_ignore))
 
@@ -100,8 +98,8 @@ def tpfp_imagenet(det_bboxes,
         if area_ranges == [(None, None)]:
             fp[...] = 1
         else:
-            det_areas = (det_bboxes[:, 2] - det_bboxes[:, 0] +
-                         1) * (det_bboxes[:, 3] - det_bboxes[:, 1] + 1)
+            det_areas = (det_bboxes[:, 2] - det_bboxes[:, 0] + 1) * (
+                det_bboxes[:, 3] - det_bboxes[:, 1] + 1)
             for i, (min_area, max_area) in enumerate(area_ranges):
                 fp[i, (det_areas >= min_area) & (det_areas < max_area)] = 1
         return tp, fp
@@ -174,10 +172,9 @@ def tpfp_default(det_bboxes,
             each array is (num_scales, m).
     """
     # an indicator of ignored gts
-    gt_ignore_inds = np.concatenate((np.zeros(gt_bboxes.shape[0],
-                                              dtype=np.bool),
-                                     np.ones(gt_bboxes_ignore.shape[0],
-                                             dtype=np.bool)))
+    gt_ignore_inds = np.concatenate(
+        (np.zeros(gt_bboxes.shape[0], dtype=np.bool),
+         np.ones(gt_bboxes_ignore.shape[0], dtype=np.bool)))
     # stack gt_bboxes and gt_bboxes_ignore for convenience
     gt_bboxes = np.vstack((gt_bboxes, gt_bboxes_ignore))
 
@@ -197,8 +194,8 @@ def tpfp_default(det_bboxes,
         if area_ranges == [(None, None)]:
             fp[...] = 1
         else:
-            det_areas = (det_bboxes[:, 2] - det_bboxes[:, 0] +
-                         1) * (det_bboxes[:, 3] - det_bboxes[:, 1] + 1)
+            det_areas = (det_bboxes[:, 2] - det_bboxes[:, 0] + 1) * (
+                det_bboxes[:, 3] - det_bboxes[:, 1] + 1)
             for i, (min_area, max_area) in enumerate(area_ranges):
                 fp[i, (det_areas >= min_area) & (det_areas < max_area)] = 1
         return tp, fp
@@ -216,8 +213,8 @@ def tpfp_default(det_bboxes,
         if min_area is None:
             gt_area_ignore = np.zeros_like(gt_ignore_inds, dtype=bool)
         else:
-            gt_areas = (gt_bboxes[:, 2] - gt_bboxes[:, 0] +
-                        1) * (gt_bboxes[:, 3] - gt_bboxes[:, 1] + 1)
+            gt_areas = (gt_bboxes[:, 2] - gt_bboxes[:, 0] + 1) * (
+                gt_bboxes[:, 3] - gt_bboxes[:, 1] + 1)
             gt_area_ignore = (gt_areas < min_area) | (gt_areas >= max_area)
         for i in sort_inds:
             if ious_max[i] >= iou_thr:
@@ -335,8 +332,8 @@ def eval_map(det_results,
             if area_ranges is None:
                 num_gts[0] += bbox.shape[0]
             else:
-                gt_areas = (bbox[:, 2] - bbox[:, 0] + 1) * (bbox[:, 3] -
-                                                            bbox[:, 1] + 1)
+                gt_areas = (bbox[:, 2] - bbox[:, 0] + 1) * (
+                    bbox[:, 3] - bbox[:, 1] + 1)
                 for k, (min_area, max_area) in enumerate(area_ranges):
                     num_gts[k] += np.sum((gt_areas >= min_area)
                                          & (gt_areas < max_area))
@@ -384,11 +381,8 @@ def eval_map(det_results,
                 aps.append(cls_result['ap'])
         mean_ap = np.array(aps).mean().item() if aps else 0.0
 
-    print_map_summary(mean_ap,
-                      eval_results,
-                      dataset,
-                      area_ranges,
-                      logger=logger)
+    print_map_summary(
+        mean_ap, eval_results, dataset, area_ranges, logger=logger)
 
     return mean_ap, eval_results
 

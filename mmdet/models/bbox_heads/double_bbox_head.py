@@ -2,7 +2,6 @@ import torch.nn as nn
 from mmcv.cnn.weight_init import normal_init, xavier_init
 
 from mmdet.ops import ConvModule
-
 from ..backbones.resnet import Bottleneck
 from ..registry import HEADS
 from .bbox_head import BBoxHead
@@ -20,6 +19,7 @@ class BasicResBlock(nn.Module):
         conv_cfg (dict): The config dict for convolution layers.
         norm_cfg (dict): The config dict for normalization layers.
     """
+
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -28,28 +28,31 @@ class BasicResBlock(nn.Module):
         super(BasicResBlock, self).__init__()
 
         # main path
-        self.conv1 = ConvModule(in_channels,
-                                in_channels,
-                                kernel_size=3,
-                                padding=1,
-                                bias=False,
-                                conv_cfg=conv_cfg,
-                                norm_cfg=norm_cfg)
-        self.conv2 = ConvModule(in_channels,
-                                out_channels,
-                                kernel_size=1,
-                                bias=False,
-                                conv_cfg=conv_cfg,
-                                norm_cfg=norm_cfg,
-                                act_cfg=None)
+        self.conv1 = ConvModule(
+            in_channels,
+            in_channels,
+            kernel_size=3,
+            padding=1,
+            bias=False,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg)
+        self.conv2 = ConvModule(
+            in_channels,
+            out_channels,
+            kernel_size=1,
+            bias=False,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=None)
 
         # identity path
-        self.conv_identity = ConvModule(in_channels,
-                                        out_channels,
-                                        kernel_size=1,
-                                        conv_cfg=conv_cfg,
-                                        norm_cfg=norm_cfg,
-                                        act_cfg=None)
+        self.conv_identity = ConvModule(
+            in_channels,
+            out_channels,
+            kernel_size=1,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            act_cfg=None)
 
         self.relu = nn.ReLU(inplace=True)
 
@@ -119,18 +122,20 @@ class DoubleConvFCBBoxHead(BBoxHead):
         branch_convs = nn.ModuleList()
         for i in range(self.num_convs):
             branch_convs.append(
-                Bottleneck(inplanes=self.conv_out_channels,
-                           planes=self.conv_out_channels // 4,
-                           conv_cfg=self.conv_cfg,
-                           norm_cfg=self.norm_cfg))
+                Bottleneck(
+                    inplanes=self.conv_out_channels,
+                    planes=self.conv_out_channels // 4,
+                    conv_cfg=self.conv_cfg,
+                    norm_cfg=self.norm_cfg))
         return branch_convs
 
     def _add_fc_branch(self):
         """Add the fc branch which consists of a sequential of fc layers"""
         branch_fcs = nn.ModuleList()
         for i in range(self.num_fcs):
-            fc_in_channels = (self.in_channels * self.roi_feat_area
-                              if i == 0 else self.fc_out_channels)
+            fc_in_channels = (
+                self.in_channels *
+                self.roi_feat_area if i == 0 else self.fc_out_channels)
             branch_fcs.append(nn.Linear(fc_in_channels, self.fc_out_channels))
         return branch_fcs
 

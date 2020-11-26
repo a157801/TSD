@@ -13,6 +13,7 @@ from .utils import (OpenImagesDetectionChallengeEvaluator, get_categories,
 
 @DATASETS.register_module
 class OpenImagesDataset(CustomDataset):
+
     def load_annotations(self, ann_file):
         print('load annotation begin', flush=True)
         img_infos = []
@@ -42,8 +43,9 @@ class OpenImagesDataset(CustomDataset):
 
     def prepare_train_img(self, idx):
         info = self.img_infos[idx]
-        results = dict(img_info=dict(filename=info[0]),
-                       ann_info=dict(bboxes=info[1], labels=info[2]))
+        results = dict(
+            img_info=dict(filename=info[0]),
+            ann_info=dict(bboxes=info[1], labels=info[2]))
         if self.proposals is not None:
             results['proposals'] = self.proposals[idx]
         self.pre_pipeline(results)
@@ -94,15 +96,15 @@ class OpenImagesDataset(CustomDataset):
     def evaluate(self, label_dir, det_file):
         cat_file = os.path.join(label_dir, 'cls-label-description.csv')
         categories = get_categories(cat_file)
-        evaluator = OpenImagesDetectionChallengeEvaluator(categories,
-                                                          group_of_weight=1.0)
+        evaluator = OpenImagesDetectionChallengeEvaluator(
+            categories, group_of_weight=1.0)
 
         gts = read_gts(label_dir)
         st = time.time()
         count = 0
         for im, gt in gts.items():
-            evaluator.add_single_ground_truth_image_info(image_id=im,
-                                                         groundtruth_dict=gt)
+            evaluator.add_single_ground_truth_image_info(
+                image_id=im, groundtruth_dict=gt)
         ed = time.time()
         print('\tGts added, using: {:.2f} s, flush=True'.format(ed - st))
 
@@ -110,16 +112,18 @@ class OpenImagesDataset(CustomDataset):
         st = time.time()
         count = 0
         for im, det in dets.items():
-            evaluator.add_single_detected_image_info(image_id=im,
-                                                     detections_dict=det)
+            evaluator.add_single_detected_image_info(
+                image_id=im, detections_dict=det)
             count += 1
             if (count + 1) % 1000 == 0:
-                print('\t{}/{} done using {:.2f} s'.format(
-                    count + 1, len(dets), (time.time() - st)),
-                      flush=True)
+                print(
+                    '\t{}/{} done using {:.2f} s'.format(
+                        count + 1, len(dets), (time.time() - st)),
+                    flush=True)
         ed = time.time()
-        print('\tDets evaluated, using: {:.2f} mins'.format((ed - st) / 60),
-              flush=True)
+        print(
+            '\tDets evaluated, using: {:.2f} mins'.format((ed - st) / 60),
+            flush=True)
 
         print('\n\taccumulating...', flush=True)
         st = time.time()

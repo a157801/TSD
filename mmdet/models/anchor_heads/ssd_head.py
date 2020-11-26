@@ -5,7 +5,6 @@ import torch.nn.functional as F
 from mmcv.cnn import xavier_init
 
 from mmdet.core import AnchorGenerator, anchor_target, multi_apply
-
 from ..losses import smooth_l1_loss
 from ..registry import HEADS
 from .anchor_head import AnchorHead
@@ -14,6 +13,7 @@ from .anchor_head import AnchorHead
 # TODO: add loss evaluator for SSD
 @HEADS.register_module
 class SSDHead(AnchorHead):
+
     def __init__(self,
                  input_size=300,
                  num_classes=81,
@@ -33,15 +33,17 @@ class SSDHead(AnchorHead):
         cls_convs = []
         for i in range(len(in_channels)):
             reg_convs.append(
-                nn.Conv2d(in_channels[i],
-                          num_anchors[i] * 4,
-                          kernel_size=3,
-                          padding=1))
+                nn.Conv2d(
+                    in_channels[i],
+                    num_anchors[i] * 4,
+                    kernel_size=3,
+                    padding=1))
             cls_convs.append(
-                nn.Conv2d(in_channels[i],
-                          num_anchors[i] * num_classes,
-                          kernel_size=3,
-                          padding=1))
+                nn.Conv2d(
+                    in_channels[i],
+                    num_anchors[i] * num_classes,
+                    kernel_size=3,
+                    padding=1))
         self.reg_convs = nn.ModuleList(reg_convs)
         self.cls_convs = nn.ModuleList(cls_convs)
 
@@ -78,11 +80,8 @@ class SSDHead(AnchorHead):
             ratios = [1.]
             for r in anchor_ratios[k]:
                 ratios += [1 / r, r]  # 4 or 6 ratio
-            anchor_generator = AnchorGenerator(base_size,
-                                               scales,
-                                               ratios,
-                                               scale_major=False,
-                                               ctr=ctr)
+            anchor_generator = AnchorGenerator(
+                base_size, scales, ratios, scale_major=False, ctr=ctr)
             indices = list(range(len(ratios)))
             indices.insert(1, len(indices))
             anchor_generator.base_anchors = torch.index_select(
@@ -111,8 +110,8 @@ class SSDHead(AnchorHead):
 
     def loss_single(self, cls_score, bbox_pred, labels, label_weights,
                     bbox_targets, bbox_weights, num_total_samples, cfg):
-        loss_cls_all = F.cross_entropy(cls_score, labels,
-                                       reduction='none') * label_weights
+        loss_cls_all = F.cross_entropy(
+            cls_score, labels, reduction='none') * label_weights
         pos_inds = (labels > 0).nonzero().view(-1)
         neg_inds = (labels == 0).nonzero().view(-1)
 
@@ -125,11 +124,12 @@ class SSDHead(AnchorHead):
         loss_cls_neg = topk_loss_cls_neg.sum()
         loss_cls = (loss_cls_pos + loss_cls_neg) / num_total_samples
 
-        loss_bbox = smooth_l1_loss(bbox_pred,
-                                   bbox_targets,
-                                   bbox_weights,
-                                   beta=cfg.smoothl1_beta,
-                                   avg_factor=num_total_samples)
+        loss_bbox = smooth_l1_loss(
+            bbox_pred,
+            bbox_targets,
+            bbox_weights,
+            beta=cfg.smoothl1_beta,
+            avg_factor=num_total_samples)
         return loss_cls[None], loss_bbox
 
     def loss(self,
@@ -145,21 +145,21 @@ class SSDHead(AnchorHead):
 
         device = cls_scores[0].device
 
-        anchor_list, valid_flag_list = self.get_anchors(featmap_sizes,
-                                                        img_metas,
-                                                        device=device)
-        cls_reg_targets = anchor_target(anchor_list,
-                                        valid_flag_list,
-                                        gt_bboxes,
-                                        img_metas,
-                                        self.target_means,
-                                        self.target_stds,
-                                        cfg,
-                                        gt_bboxes_ignore_list=gt_bboxes_ignore,
-                                        gt_labels_list=gt_labels,
-                                        label_channels=1,
-                                        sampling=False,
-                                        unmap_outputs=False)
+        anchor_list, valid_flag_list = self.get_anchors(
+            featmap_sizes, img_metas, device=device)
+        cls_reg_targets = anchor_target(
+            anchor_list,
+            valid_flag_list,
+            gt_bboxes,
+            img_metas,
+            self.target_means,
+            self.target_stds,
+            cfg,
+            gt_bboxes_ignore_list=gt_bboxes_ignore,
+            gt_labels_list=gt_labels,
+            label_channels=1,
+            sampling=False,
+            unmap_outputs=False)
         if cls_reg_targets is None:
             return None
         (labels_list, label_weights_list, bbox_targets_list, bbox_weights_list,
@@ -188,13 +188,14 @@ class SSDHead(AnchorHead):
         assert torch.isfinite(all_bbox_preds).all().item(), \
             'bbox predications become infinite or NaN!'
 
-        losses_cls, losses_bbox = multi_apply(self.loss_single,
-                                              all_cls_scores,
-                                              all_bbox_preds,
-                                              all_labels,
-                                              all_label_weights,
-                                              all_bbox_targets,
-                                              all_bbox_weights,
-                                              num_total_samples=num_total_pos,
-                                              cfg=cfg)
+        losses_cls, losses_bbox = multi_apply(
+            self.loss_single,
+            all_cls_scores,
+            all_bbox_preds,
+            all_labels,
+            all_label_weights,
+            all_bbox_targets,
+            all_bbox_weights,
+            num_total_samples=num_total_pos,
+            cfg=cfg)
         return dict(loss_cls=losses_cls, loss_bbox=losses_bbox)

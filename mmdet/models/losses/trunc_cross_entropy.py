@@ -6,6 +6,7 @@ from ..registry import LOSSES
 
 @LOSSES.register_module
 class TrunCrossEntropyLoss(nn.Module):
+
     def __init__(self, loss_trunc_thr=0.5, decay=0.1, ignore_index=-1):
         super(TrunCrossEntropyLoss, self).__init__()
         self.loss_trunc_thr = loss_trunc_thr

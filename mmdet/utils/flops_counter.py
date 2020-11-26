@@ -123,9 +123,8 @@ def print_model_with_flops(model, units='GMac', precision=3, ost=sys.stdout):
     def flops_repr(self):
         accumulated_flops_cost = self.accumulate_flops()
         return ', '.join([
-            flops_to_string(accumulated_flops_cost,
-                            units=units,
-                            precision=precision),
+            flops_to_string(
+                accumulated_flops_cost, units=units, precision=precision),
             '{:.3%} MACs'.format(accumulated_flops_cost / total_flops),
             self.original_extra_repr()
         ])
@@ -224,6 +223,7 @@ def reset_flops_count(self):
 
 
 def add_flops_mask(module, mask):
+
     def add_flops_mask_func(module):
         if isinstance(module, torch.nn.Conv2d):
             module.__mask__ = mask
@@ -304,8 +304,8 @@ def deconv_flops_counter_hook(conv_module, input, output):
     groups = conv_module.groups
 
     filters_per_channel = out_channels // groups
-    conv_per_position_flops = (kernel_height * kernel_width * in_channels *
-                               filters_per_channel)
+    conv_per_position_flops = (
+        kernel_height * kernel_width * in_channels * filters_per_channel)
 
     active_elements_count = batch_size * input_height * input_width
     overall_conv_flops = conv_per_position_flops * active_elements_count

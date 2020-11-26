@@ -28,6 +28,7 @@ from . import (np_box_list, np_box_list_ops, np_box_mask_list,
 
 class PerImageEvaluation(object):
     """Evaluate detection result of a single image."""
+
     def __init__(self,
                  num_groundtruth_classes,
                  matching_iou_threshold=0.5,
@@ -221,10 +222,10 @@ class PerImageEvaluation(object):
                     mask_mode = True
                 if mask_mode:
                     detected_boxlist = np_box_mask_list.BoxMaskList(
-                        box_data=np.expand_dims(detected_boxes[max_score_id],
-                                                axis=0),
-                        mask_data=np.expand_dims(detected_masks[max_score_id],
-                                                 axis=0))
+                        box_data=np.expand_dims(
+                            detected_boxes[max_score_id], axis=0),
+                        mask_data=np.expand_dims(
+                            detected_masks[max_score_id], axis=0))
                     gt_boxlist = np_box_mask_list.BoxMaskList(
                         box_data=groundtruth_boxes,
                         mask_data=groundtruth_masks)
@@ -232,8 +233,8 @@ class PerImageEvaluation(object):
                                                    gt_boxlist)
                 else:
                     detected_boxlist = np_box_list.BoxList(
-                        np.expand_dims(detected_boxes[max_score_id, :],
-                                       axis=0))
+                        np.expand_dims(
+                            detected_boxes[max_score_id, :], axis=0))
                     gt_boxlist = np_box_list.BoxList(groundtruth_boxes)
                     iou = np_box_list_ops.iou(detected_boxlist, gt_boxlist)
                 if np.max(iou) >= self.matching_iou_threshold:
@@ -503,8 +504,8 @@ class PerImageEvaluation(object):
                         is_matched_to_difficult_box[i] = True
 
         scores_group_of = np.zeros(ioa.shape[1], dtype=float)
-        tp_fp_labels_group_of = self.group_of_weight * np.ones(ioa.shape[1],
-                                                               dtype=float)
+        tp_fp_labels_group_of = self.group_of_weight * np.ones(
+            ioa.shape[1], dtype=float)
         # Tp-fp evaluation for group of boxes.
         if ioa.shape[1] > 0:
             max_overlap_group_of_gt_ids = np.argmax(ioa, axis=1)

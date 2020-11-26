@@ -6,6 +6,7 @@ import numpy as np
 
 
 def print_coco_results(results):
+
     def _print(result, ap=1, iouThr=None, areaRng='all', maxDets=100):
         iStr = ' {:<18} {} @[ IoU={:<9} | \
         area={:>6s} | maxDets={:>3d} ] = {:0.3f}'
@@ -166,11 +167,12 @@ def get_results(filename,
     assert dataset in ['coco', 'voc', 'cityscapes']
 
     if dataset in ['coco', 'cityscapes']:
-        results = get_coco_style_results(filename,
-                                         task=task,
-                                         metric=metric,
-                                         prints=prints,
-                                         aggregate=aggregate)
+        results = get_coco_style_results(
+            filename,
+            task=task,
+            metric=metric,
+            prints=prints,
+            aggregate=aggregate)
     elif dataset == 'voc':
         if task != 'bbox':
             print('Only bbox analysis is supported for Pascal VOC')
@@ -178,9 +180,8 @@ def get_results(filename,
         if metric not in [None, ['AP'], ['AP50']]:
             print('Only the AP50 metric is supported for Pascal VOC')
             print('Will report AP50 metric\n')
-        results = get_voc_style_results(filename,
-                                        prints=prints,
-                                        aggregate=aggregate)
+        results = get_voc_style_results(
+            filename, prints=prints, aggregate=aggregate)
 
     return results
 
@@ -202,47 +203,53 @@ def get_distortions_from_results(eval_output):
 def main():
     parser = ArgumentParser(description='Corruption Result Analysis')
     parser.add_argument('filename', help='result file path')
-    parser.add_argument('--dataset',
-                        type=str,
-                        choices=['coco', 'voc', 'cityscapes'],
-                        default='coco',
-                        help='dataset type')
-    parser.add_argument('--task',
-                        type=str,
-                        nargs='+',
-                        choices=['bbox', 'segm'],
-                        default=['bbox'],
-                        help='task to report')
-    parser.add_argument('--metric',
-                        nargs='+',
-                        choices=[
-                            None, 'AP', 'AP50', 'AP75', 'APs', 'APm', 'APl',
-                            'AR1', 'AR10', 'AR100', 'ARs', 'ARm', 'ARl'
-                        ],
-                        default=None,
-                        help='metric to report')
-    parser.add_argument('--prints',
-                        type=str,
-                        nargs='+',
-                        choices=['P', 'mPC', 'rPC'],
-                        default='mPC',
-                        help='corruption benchmark metric to print')
-    parser.add_argument('--aggregate',
-                        type=str,
-                        choices=['all', 'benchmark'],
-                        default='benchmark',
-                        help='aggregate all results or only those \
+    parser.add_argument(
+        '--dataset',
+        type=str,
+        choices=['coco', 'voc', 'cityscapes'],
+        default='coco',
+        help='dataset type')
+    parser.add_argument(
+        '--task',
+        type=str,
+        nargs='+',
+        choices=['bbox', 'segm'],
+        default=['bbox'],
+        help='task to report')
+    parser.add_argument(
+        '--metric',
+        nargs='+',
+        choices=[
+            None, 'AP', 'AP50', 'AP75', 'APs', 'APm', 'APl', 'AR1', 'AR10',
+            'AR100', 'ARs', 'ARm', 'ARl'
+        ],
+        default=None,
+        help='metric to report')
+    parser.add_argument(
+        '--prints',
+        type=str,
+        nargs='+',
+        choices=['P', 'mPC', 'rPC'],
+        default='mPC',
+        help='corruption benchmark metric to print')
+    parser.add_argument(
+        '--aggregate',
+        type=str,
+        choices=['all', 'benchmark'],
+        default='benchmark',
+        help='aggregate all results or only those \
         for benchmark corruptions')
 
     args = parser.parse_args()
 
     for task in args.task:
-        get_results(args.filename,
-                    dataset=args.dataset,
-                    task=task,
-                    metric=args.metric,
-                    prints=args.prints,
-                    aggregate=args.aggregate)
+        get_results(
+            args.filename,
+            dataset=args.dataset,
+            task=task,
+            metric=args.metric,
+            prints=args.prints,
+            aggregate=args.aggregate)
 
 
 if __name__ == '__main__':

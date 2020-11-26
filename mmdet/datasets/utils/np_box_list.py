@@ -28,6 +28,7 @@ class BoxList(object):
   Optionally, users can add additional related fields (such as
   objectness/classification scores).
   """
+
     def __init__(self, data):
         """Constructs box collection.
 

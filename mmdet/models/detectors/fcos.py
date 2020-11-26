@@ -4,6 +4,7 @@ from .single_stage import SingleStageDetector
 
 @DETECTORS.register_module
 class FCOS(SingleStageDetector):
+
     def __init__(self,
                  backbone,
                  neck,

@@ -8,6 +8,7 @@ from . import roi_pool_cuda
 
 
 class RoIPoolFunction(Function):
+
     @staticmethod
     def forward(ctx, features, rois, out_size, spatial_scale):
         assert features.is_cuda
@@ -50,6 +51,7 @@ roi_pool = RoIPoolFunction.apply
 
 
 class RoIPool(nn.Module):
+
     def __init__(self, out_size, spatial_scale, use_torchvision=False):
         super(RoIPool, self).__init__()
 

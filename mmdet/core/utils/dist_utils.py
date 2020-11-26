@@ -42,6 +42,7 @@ def allreduce_grads(params, coalesce=True, bucket_size_mb=-1):
 
 
 class DistOptimizerHook(OptimizerHook):
+
     def __init__(self, grad_clip=None, coalesce=True, bucket_size_mb=-1):
         self.grad_clip = grad_clip
         self.coalesce = coalesce

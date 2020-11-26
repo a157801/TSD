@@ -26,6 +26,7 @@ class BoxMaskList(np_box_list.BoxList):
   In particular, its constructor receives both boxes and masks. Note that the
   masks correspond to the full image.
   """
+
     def __init__(self, box_data, mask_data):
         """Constructs box collection.
 

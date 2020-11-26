@@ -1,7 +1,6 @@
 import torch.nn as nn
 
 from mmdet.core import bbox2result
-
 from .. import builder
 from ..registry import DETECTORS
 from .base import BaseDetector
@@ -14,6 +13,7 @@ class SingleStageDetector(BaseDetector):
     Single-stage detectors directly and densely predict bounding boxes on the
     output features of the backbone+neck.
     """
+
     def __init__(self,
                  backbone,
                  neck=None,
@@ -67,8 +67,8 @@ class SingleStageDetector(BaseDetector):
         x = self.extract_feat(img)
         outs = self.bbox_head(x)
         loss_inputs = outs + (gt_bboxes, gt_labels, img_metas, self.train_cfg)
-        losses = self.bbox_head.loss(*loss_inputs,
-                                     gt_bboxes_ignore=gt_bboxes_ignore)
+        losses = self.bbox_head.loss(
+            *loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
         return losses
 
     def simple_test(self, img, img_metas, rescale=False):

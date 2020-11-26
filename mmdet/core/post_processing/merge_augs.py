@@ -2,7 +2,6 @@ import numpy as np
 import torch
 
 from mmdet.ops import nms
-
 from ..bbox import bbox_mapping_back
 
 
@@ -97,7 +96,6 @@ def merge_aug_masks(aug_masks, img_metas, rcnn_test_cfg, weights=None):
     if weights is None:
         merged_masks = np.mean(recovered_masks, axis=0)
     else:
-        merged_masks = np.average(np.array(recovered_masks),
-                                  axis=0,
-                                  weights=np.array(weights))
+        merged_masks = np.average(
+            np.array(recovered_masks), axis=0, weights=np.array(weights))
     return merged_masks

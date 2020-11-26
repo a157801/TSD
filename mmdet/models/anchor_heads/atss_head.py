@@ -8,7 +8,6 @@ from mmdet.core import (PseudoSampler, anchor_inside_flags, bbox2delta,
                         build_assigner, delta2bbox, force_fp32,
                         images_to_levels, multi_apply, multiclass_nms, unmap)
 from mmdet.ops import ConvModule, Scale
-
 from ..builder import build_loss
 from ..registry import HEADS
 from ..utils import bias_init_with_prob
@@ -34,6 +33,7 @@ class ATSSHead(AnchorHead):
 
     https://arxiv.org/abs/1912.02424
     """
+
     def __init__(self,
                  num_classes,
                  in_channels,
@@ -42,9 +42,10 @@ class ATSSHead(AnchorHead):
                  scales_per_octave=1,
                  conv_cfg=None,
                  norm_cfg=dict(type='GN', num_groups=32, requires_grad=True),
-                 loss_centerness=dict(type='CrossEntropyLoss',
-                                      use_sigmoid=True,
-                                      loss_weight=1.0),
+                 loss_centerness=dict(
+                     type='CrossEntropyLoss',
+                     use_sigmoid=True,
+                     loss_weight=1.0),
                  **kwargs):
         self.stacked_convs = stacked_convs
         self.octave_base_scale = octave_base_scale
@@ -55,10 +56,8 @@ class ATSSHead(AnchorHead):
         octave_scales = np.array(
             [2**(i / scales_per_octave) for i in range(scales_per_octave)])
         anchor_scales = octave_scales * octave_base_scale
-        super(ATSSHead, self).__init__(num_classes,
-                                       in_channels,
-                                       anchor_scales=anchor_scales,
-                                       **kwargs)
+        super(ATSSHead, self).__init__(
+            num_classes, in_channels, anchor_scales=anchor_scales, **kwargs)
 
         self.loss_centerness = build_loss(loss_centerness)
 
@@ -69,33 +68,32 @@ class ATSSHead(AnchorHead):
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
             self.cls_convs.append(
-                ConvModule(chn,
-                           self.feat_channels,
-                           3,
-                           stride=1,
-                           padding=1,
-                           conv_cfg=self.conv_cfg,
-                           norm_cfg=self.norm_cfg))
+                ConvModule(
+                    chn,
+                    self.feat_channels,
+                    3,
+                    stride=1,
+                    padding=1,
+                    conv_cfg=self.conv_cfg,
+                    norm_cfg=self.norm_cfg))
             self.reg_convs.append(
-                ConvModule(chn,
-                           self.feat_channels,
-                           3,
-                           stride=1,
-                           padding=1,
-                           conv_cfg=self.conv_cfg,
-                           norm_cfg=self.norm_cfg))
-        self.atss_cls = nn.Conv2d(self.feat_channels,
-                                  self.num_anchors * self.cls_out_channels,
-                                  3,
-                                  padding=1)
-        self.atss_reg = nn.Conv2d(self.feat_channels,
-                                  self.num_anchors * 4,
-                                  3,
-                                  padding=1)
-        self.atss_centerness = nn.Conv2d(self.feat_channels,
-                                         self.num_anchors * 1,
-                                         3,
-                                         padding=1)
+                ConvModule(
+                    chn,
+                    self.feat_channels,
+                    3,
+                    stride=1,
+                    padding=1,
+                    conv_cfg=self.conv_cfg,
+                    norm_cfg=self.norm_cfg))
+        self.atss_cls = nn.Conv2d(
+            self.feat_channels,
+            self.num_anchors * self.cls_out_channels,
+            3,
+            padding=1)
+        self.atss_reg = nn.Conv2d(
+            self.feat_channels, self.num_anchors * 4, 3, padding=1)
+        self.atss_centerness = nn.Conv2d(
+            self.feat_channels, self.num_anchors * 1, 3, padding=1)
         self.scales = nn.ModuleList([Scale(1.0) for _ in self.anchor_strides])
 
     def init_weights(self):
@@ -137,10 +135,8 @@ class ATSSHead(AnchorHead):
         label_weights = label_weights.reshape(-1)
 
         # classification loss
-        loss_cls = self.loss_cls(cls_score,
-                                 labels,
-                                 label_weights,
-                                 avg_factor=num_total_samples)
+        loss_cls = self.loss_cls(
+            cls_score, labels, label_weights, avg_factor=num_total_samples)
 
         pos_inds = torch.nonzero(labels).squeeze(1)
 
@@ -160,10 +156,11 @@ class ATSSHead(AnchorHead):
                                                  self.target_stds)
 
             # regression loss
-            loss_bbox = self.loss_bbox(pos_decode_bbox_pred,
-                                       pos_decode_bbox_targets,
-                                       weight=centerness_targets,
-                                       avg_factor=1.0)
+            loss_bbox = self.loss_bbox(
+                pos_decode_bbox_pred,
+                pos_decode_bbox_targets,
+                weight=centerness_targets,
+                avg_factor=1.0)
 
             # centerness loss
             loss_centerness = self.loss_centerness(
@@ -193,9 +190,8 @@ class ATSSHead(AnchorHead):
         assert len(featmap_sizes) == len(self.anchor_generators)
 
         device = cls_scores[0].device
-        anchor_list, valid_flag_list = self.get_anchors(featmap_sizes,
-                                                        img_metas,
-                                                        device=device)
+        anchor_list, valid_flag_list = self.get_anchors(
+            featmap_sizes, img_metas, device=device)
         label_channels = self.cls_out_channels if self.use_sigmoid_cls else 1
 
         cls_reg_targets = self.atss_target(
@@ -233,9 +229,10 @@ class ATSSHead(AnchorHead):
         bbox_avg_factor = sum(bbox_avg_factor)
         bbox_avg_factor = reduce_mean(bbox_avg_factor).item()
         losses_bbox = list(map(lambda x: x / bbox_avg_factor, losses_bbox))
-        return dict(loss_cls=losses_cls,
-                    loss_bbox=losses_bbox,
-                    loss_centerness=loss_centerness)
+        return dict(
+            loss_cls=losses_cls,
+            loss_bbox=losses_bbox,
+            loss_centerness=loss_centerness)
 
     def centerness_target(self, anchors, bbox_targets):
         # only calculate pos centerness targets, otherwise there may be nan
@@ -269,10 +266,10 @@ class ATSSHead(AnchorHead):
         num_levels = len(cls_scores)
         device = cls_scores[0].device
         mlvl_anchors = [
-            self.anchor_generators[i].grid_anchors(cls_scores[i].size()[-2:],
-                                                   self.anchor_strides[i],
-                                                   device=device)
-            for i in range(num_levels)
+            self.anchor_generators[i].grid_anchors(
+                cls_scores[i].size()[-2:],
+                self.anchor_strides[i],
+                device=device) for i in range(num_levels)
         ]
 
         result_list = []
@@ -341,12 +338,13 @@ class ATSSHead(AnchorHead):
         mlvl_scores = torch.cat([padding, mlvl_scores], dim=1)
         mlvl_centerness = torch.cat(mlvl_centerness)
 
-        det_bboxes, det_labels = multiclass_nms(mlvl_bboxes,
-                                                mlvl_scores,
-                                                cfg.score_thr,
-                                                cfg.nms,
-                                                cfg.max_per_img,
-                                                score_factors=mlvl_centerness)
+        det_bboxes, det_labels = multiclass_nms(
+            mlvl_bboxes,
+            mlvl_scores,
+            cfg.score_thr,
+            cfg.nms,
+            cfg.max_per_img,
+            score_factors=mlvl_centerness)
         return det_bboxes, det_labels
 
     def atss_target(self,
@@ -382,18 +380,18 @@ class ATSSHead(AnchorHead):
         if gt_labels_list is None:
             gt_labels_list = [None for _ in range(num_imgs)]
         (all_anchors, all_labels, all_label_weights, all_bbox_targets,
-         all_bbox_weights, pos_inds_list,
-         neg_inds_list) = multi_apply(self.atss_target_single,
-                                      anchor_list,
-                                      valid_flag_list,
-                                      num_level_anchors_list,
-                                      gt_bboxes_list,
-                                      gt_bboxes_ignore_list,
-                                      gt_labels_list,
-                                      img_metas,
-                                      cfg=cfg,
-                                      label_channels=label_channels,
-                                      unmap_outputs=unmap_outputs)
+         all_bbox_weights, pos_inds_list, neg_inds_list) = multi_apply(
+             self.atss_target_single,
+             anchor_list,
+             valid_flag_list,
+             num_level_anchors_list,
+             gt_bboxes_list,
+             gt_bboxes_ignore_list,
+             gt_labels_list,
+             img_metas,
+             cfg=cfg,
+             label_channels=label_channels,
+             unmap_outputs=unmap_outputs)
         # no valid anchors
         if any([labels is None for labels in all_labels]):
             return None

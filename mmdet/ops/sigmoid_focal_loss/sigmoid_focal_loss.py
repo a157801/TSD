@@ -6,6 +6,7 @@ from . import sigmoid_focal_loss_cuda
 
 
 class SigmoidFocalLossFunction(Function):
+
     @staticmethod
     def forward(ctx, input, target, gamma=2.0, alpha=0.25):
         ctx.save_for_backward(input, target)
@@ -36,6 +37,7 @@ sigmoid_focal_loss = SigmoidFocalLossFunction.apply
 
 # TODO: remove this module
 class SigmoidFocalLoss(nn.Module):
+
     def __init__(self, gamma, alpha):
         super(SigmoidFocalLoss, self).__init__()
         self.gamma = gamma

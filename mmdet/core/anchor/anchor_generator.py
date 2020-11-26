@@ -13,6 +13,7 @@ class AnchorGenerator(object):
                 [ 0., 16.,  8., 24.],
                 [16., 16., 24., 24.]])
     """
+
     def __init__(self, base_size, scales, ratios, scale_major=True, ctr=None):
         self.base_size = base_size
         self.scales = torch.Tensor(scales)

@@ -5,7 +5,6 @@ import numpy as np
 from numpy import random
 
 from mmdet.core.evaluation.bbox_overlaps import bbox_overlaps
-
 from ..registry import PIPELINES
 
 try:
@@ -46,6 +45,7 @@ class Resize(object):
         keep_ratio (bool): Whether to keep the aspect ratio when resizing the
             image.
     """
+
     def __init__(self,
                  img_scale=None,
                  multiscale_mode='range',
@@ -83,10 +83,12 @@ class Resize(object):
         assert mmcv.is_list_of(img_scales, tuple) and len(img_scales) == 2
         img_scale_long = [max(s) for s in img_scales]
         img_scale_short = [min(s) for s in img_scales]
-        long_edge = np.random.randint(min(img_scale_long),
-                                      max(img_scale_long) + 1)
-        short_edge = np.random.randint(min(img_scale_short),
-                                       max(img_scale_short) + 1)
+        long_edge = np.random.randint(
+            min(img_scale_long),
+            max(img_scale_long) + 1)
+        short_edge = np.random.randint(
+            min(img_scale_short),
+            max(img_scale_short) + 1)
         img_scale = (long_edge, short_edge)
         return img_scale, None
 
@@ -117,13 +119,11 @@ class Resize(object):
 
     def _resize_img(self, results):
         if self.keep_ratio:
-            img, scale_factor = mmcv.imrescale(results['img'],
-                                               results['scale'],
-                                               return_scale=True)
+            img, scale_factor = mmcv.imrescale(
+                results['img'], results['scale'], return_scale=True)
         else:
-            img, w_scale, h_scale = mmcv.imresize(results['img'],
-                                                  results['scale'],
-                                                  return_scale=True)
+            img, w_scale, h_scale = mmcv.imresize(
+                results['img'], results['scale'], return_scale=True)
             scale_factor = np.array([w_scale, h_scale, w_scale, h_scale],
                                     dtype=np.float32)
         results['img'] = img
@@ -146,9 +146,8 @@ class Resize(object):
                 continue
             if self.keep_ratio:
                 masks = [
-                    mmcv.imrescale(mask,
-                                   results['scale_factor'],
-                                   interpolation='nearest')
+                    mmcv.imrescale(
+                        mask, results['scale_factor'], interpolation='nearest')
                     for mask in results[key]
                 ]
             else:
@@ -160,19 +159,17 @@ class Resize(object):
             if masks:
                 results[key] = np.stack(masks)
             else:
-                results[key] = np.empty((0, ) + results['img_shape'],
-                                        dtype=np.uint8)
+                results[key] = np.empty(
+                    (0, ) + results['img_shape'], dtype=np.uint8)
 
     def _resize_seg(self, results):
         for key in results.get('seg_fields', []):
             if self.keep_ratio:
-                gt_seg = mmcv.imrescale(results[key],
-                                        results['scale'],
-                                        interpolation='nearest')
+                gt_seg = mmcv.imrescale(
+                    results[key], results['scale'], interpolation='nearest')
             else:
-                gt_seg = mmcv.imresize(results[key],
-                                       results['scale'],
-                                       interpolation='nearest')
+                gt_seg = mmcv.imresize(
+                    results[key], results['scale'], interpolation='nearest')
             results['gt_semantic_seg'] = gt_seg
 
     def __call__(self, results):
@@ -205,6 +202,7 @@ class RandomFlip(object):
     Args:
         flip_ratio (float, optional): The flipping probability.
     """
+
     def __init__(self, flip_ratio=None, direction='horizontal'):
         self.flip_ratio = flip_ratio
         self.direction = direction
@@ -242,8 +240,8 @@ class RandomFlip(object):
             results['flip_direction'] = self.direction
         if results['flip']:
             # flip image
-            results['img'] = mmcv.imflip(results['img'],
-                                         direction=results['flip_direction'])
+            results['img'] = mmcv.imflip(
+                results['img'], direction=results['flip_direction'])
             # flip bboxes
             for key in results.get('bbox_fields', []):
                 results[key] = self.bbox_flip(results[key],
@@ -258,13 +256,13 @@ class RandomFlip(object):
                 if masks:
                     results[key] = np.stack(masks)
                 else:
-                    results[key] = np.empty((0, ) + results['img_shape'],
-                                            dtype=np.uint8)
+                    results[key] = np.empty(
+                        (0, ) + results['img_shape'], dtype=np.uint8)
 
             # flip segs
             for key in results.get('seg_fields', []):
-                results[key] = mmcv.imflip(results[key],
-                                           direction=results['flip_direction'])
+                results[key] = mmcv.imflip(
+                    results[key], direction=results['flip_direction'])
         return results
 
     def __repr__(self):
@@ -284,6 +282,7 @@ class Pad(object):
         size_divisor (int, optional): The divisor of padded size.
         pad_val (float, optional): Padding value, 0 by default.
     """
+
     def __init__(self, size=None, size_divisor=None, pad_val=0):
         self.size = size
         self.size_divisor = size_divisor
@@ -296,9 +295,8 @@ class Pad(object):
         if self.size is not None:
             padded_img = mmcv.impad(results['img'], self.size, self.pad_val)
         elif self.size_divisor is not None:
-            padded_img = mmcv.impad_to_multiple(results['img'],
-                                                self.size_divisor,
-                                                pad_val=self.pad_val)
+            padded_img = mmcv.impad_to_multiple(
+                results['img'], self.size_divisor, pad_val=self.pad_val)
         results['img'] = padded_img
         results['pad_shape'] = padded_img.shape
         results['pad_fixed_size'] = self.size
@@ -343,6 +341,7 @@ class Normalize(object):
         to_rgb (bool): Whether to convert the image from BGR to RGB,
             default is true.
     """
+
     def __init__(self, mean, std, to_rgb=True):
         self.mean = np.array(mean, dtype=np.float32)
         self.std = np.array(std, dtype=np.float32)
@@ -351,9 +350,8 @@ class Normalize(object):
     def __call__(self, results):
         results['img'] = mmcv.imnormalize(results['img'], self.mean, self.std,
                                           self.to_rgb)
-        results['img_norm_cfg'] = dict(mean=self.mean,
-                                       std=self.std,
-                                       to_rgb=self.to_rgb)
+        results['img_norm_cfg'] = dict(
+            mean=self.mean, std=self.std, to_rgb=self.to_rgb)
         return results
 
     def __repr__(self):
@@ -370,6 +368,7 @@ class RandomCrop(object):
     Args:
         crop_size (tuple): Expected size after cropping, (h, w).
     """
+
     def __init__(self, crop_size):
         self.crop_size = crop_size
 
@@ -441,15 +440,15 @@ class SegRescale(object):
     Args:
         scale_factor (float): The scale factor of the final output.
     """
+
     def __init__(self, scale_factor=1):
         self.scale_factor = scale_factor
 
     def __call__(self, results):
         for key in results.get('seg_fields', []):
             if self.scale_factor != 1:
-                results[key] = mmcv.imrescale(results[key],
-                                              self.scale_factor,
-                                              interpolation='nearest')
+                results[key] = mmcv.imrescale(
+                    results[key], self.scale_factor, interpolation='nearest')
         return results
 
     def __repr__(self):
@@ -478,6 +477,7 @@ class PhotoMetricDistortion(object):
         saturation_range (tuple): range of saturation.
         hue_delta (int): delta of hue.
     """
+
     def __init__(self,
                  brightness_delta=32,
                  contrast_range=(0.5, 1.5),
@@ -563,6 +563,7 @@ class Expand(object):
         ratio_range (tuple): range of expand ratio.
         prob (float): probability of applying this transformation
     """
+
     def __init__(self,
                  mean=(0, 0, 0),
                  to_rgb=True,
@@ -608,8 +609,8 @@ class Expand(object):
             if expand_gt_masks:
                 results['gt_masks'] = np.stack(expand_gt_masks)
             else:
-                results['gt_masks'] = np.empty((0, ) + results['img_shape'],
-                                               dtype=np.uint8)
+                results['gt_masks'] = np.empty(
+                    (0, ) + results['img_shape'], dtype=np.uint8)
 
         # not tested
         if 'gt_semantic_seg' in results:
@@ -642,6 +643,7 @@ class MinIoURandomCrop(object):
         min_crop_size (float): minimum crop's size (i.e. h,w := a*h, a*w,
         where a >= min_crop_size).
     """
+
     def __init__(self, min_ious=(0.1, 0.3, 0.5, 0.7, 0.9), min_crop_size=0.3):
         # 1: return ori img
         self.min_ious = min_ious
@@ -672,8 +674,8 @@ class MinIoURandomCrop(object):
 
                 patch = np.array(
                     (int(left), int(top), int(left + new_w), int(top + new_h)))
-                overlaps = bbox_overlaps(patch.reshape(-1, 4),
-                                         boxes.reshape(-1, 4)).reshape(-1)
+                overlaps = bbox_overlaps(
+                    patch.reshape(-1, 4), boxes.reshape(-1, 4)).reshape(-1)
                 if len(overlaps) > 0 and overlaps.min() < min_iou:
                     continue
 
@@ -729,6 +731,7 @@ class MinIoURandomCrop(object):
 
 @PIPELINES.register_module
 class Corrupt(object):
+
     def __init__(self, corruption, severity=1):
         self.corruption = corruption
         self.severity = severity
@@ -736,9 +739,10 @@ class Corrupt(object):
     def __call__(self, results):
         if corrupt is None:
             raise RuntimeError('imagecorruptions is not installed')
-        results['img'] = corrupt(results['img'].astype(np.uint8),
-                                 corruption_name=self.corruption,
-                                 severity=self.severity)
+        results['img'] = corrupt(
+            results['img'].astype(np.uint8),
+            corruption_name=self.corruption,
+            severity=self.severity)
         return results
 
     def __repr__(self):
@@ -750,6 +754,7 @@ class Corrupt(object):
 
 @PIPELINES.register_module
 class Albu(object):
+
     def __init__(self,
                  transforms,
                  bbox_params=None,
@@ -783,8 +788,8 @@ class Albu(object):
             bbox_params['label_fields'] = ['idx_mapper']
             del bbox_params['filter_lost_elements']
 
-        self.bbox_params = (self.albu_builder(bbox_params)
-                            if bbox_params else None)
+        self.bbox_params = (
+            self.albu_builder(bbox_params) if bbox_params else None)
         self.aug = Compose([self.albu_builder(t) for t in self.transforms],
                            bbox_params=self.bbox_params)
 
@@ -864,8 +869,8 @@ class Albu(object):
 
         if 'bboxes' in results:
             if isinstance(results['bboxes'], list):
-                results['bboxes'] = np.array(results['bboxes'],
-                                             dtype=np.float32)
+                results['bboxes'] = np.array(
+                    results['bboxes'], dtype=np.float32)
             results['bboxes'] = results['bboxes'].reshape(-1, 4)
 
             # filter label_fields

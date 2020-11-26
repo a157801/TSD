@@ -5,6 +5,7 @@ from .sampling_result import SamplingResult
 
 
 class PseudoSampler(BaseSampler):
+
     def __init__(self, **kwargs):
         pass
 

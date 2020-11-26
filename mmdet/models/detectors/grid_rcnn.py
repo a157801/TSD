@@ -1,7 +1,6 @@
 import torch
 
 from mmdet.core import bbox2result, bbox2roi, build_assigner, build_sampler
-
 from .. import builder
 from ..registry import DETECTORS
 from .two_stage import TwoStageDetector
@@ -15,6 +14,7 @@ class GridRCNN(TwoStageDetector):
     - Grid R-CNN (https://arxiv.org/abs/1811.12030)
     - Grid R-CNN Plus: Faster and Better (https://arxiv.org/abs/1906.05688)
     """
+
     def __init__(self,
                  backbone,
                  rpn_head,
@@ -28,15 +28,16 @@ class GridRCNN(TwoStageDetector):
                  shared_head=None,
                  pretrained=None):
         assert grid_head is not None
-        super(GridRCNN, self).__init__(backbone=backbone,
-                                       neck=neck,
-                                       shared_head=shared_head,
-                                       rpn_head=rpn_head,
-                                       bbox_roi_extractor=bbox_roi_extractor,
-                                       bbox_head=bbox_head,
-                                       train_cfg=train_cfg,
-                                       test_cfg=test_cfg,
-                                       pretrained=pretrained)
+        super(GridRCNN, self).__init__(
+            backbone=backbone,
+            neck=neck,
+            shared_head=shared_head,
+            rpn_head=rpn_head,
+            bbox_roi_extractor=bbox_roi_extractor,
+            bbox_head=bbox_head,
+            train_cfg=train_cfg,
+            test_cfg=test_cfg,
+            pretrained=pretrained)
 
         if grid_roi_extractor is not None:
             self.grid_roi_extractor = builder.build_roi_extractor(
@@ -121,8 +122,8 @@ class GridRCNN(TwoStageDetector):
             rpn_outs = self.rpn_head(x)
             rpn_loss_inputs = rpn_outs + (gt_bboxes, img_metas,
                                           self.train_cfg.rpn)
-            rpn_losses = self.rpn_head.loss(*rpn_loss_inputs,
-                                            gt_bboxes_ignore=gt_bboxes_ignore)
+            rpn_losses = self.rpn_head.loss(
+                *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rpn_losses)
 
             proposal_cfg = self.train_cfg.get('rpn_proposal',
@@ -135,8 +136,8 @@ class GridRCNN(TwoStageDetector):
         if self.with_bbox:
             # assign gts and sample proposals
             bbox_assigner = build_assigner(self.train_cfg.rcnn.assigner)
-            bbox_sampler = build_sampler(self.train_cfg.rcnn.sampler,
-                                         context=self)
+            bbox_sampler = build_sampler(
+                self.train_cfg.rcnn.sampler, context=self)
             num_imgs = img.size(0)
             if gt_bboxes_ignore is None:
                 gt_bboxes_ignore = [None for _ in range(num_imgs)]
@@ -205,11 +206,8 @@ class GridRCNN(TwoStageDetector):
             x, img_metas,
             self.test_cfg.rpn) if proposals is None else proposals
 
-        det_bboxes, det_labels = self.simple_test_bboxes(x,
-                                                         img_metas,
-                                                         proposal_list,
-                                                         self.test_cfg.rcnn,
-                                                         rescale=False)
+        det_bboxes, det_labels = self.simple_test_bboxes(
+            x, img_metas, proposal_list, self.test_cfg.rcnn, rescale=False)
 
         # pack rois into bboxes
         grid_rois = bbox2roi([det_bboxes[:, :4]])

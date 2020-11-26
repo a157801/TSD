@@ -223,16 +223,16 @@ def bbox_target_single_tsd(pos_bboxes,
         bbox_pred_ = bbox_pred_.view(N, -1, 4)
         TSD_bbox_pred_ = TSD_bbox_pred_.view(N, -1, 4)
 
-        sibling_head_bboxes = delta2bbox(pos_bboxes,
-                                         bbox_pred_[np.arange(num_pos),
-                                                    labels[:num_pos]],
-                                         means=target_means,
-                                         stds=target_stds)
-        TSD_head_bboxes = delta2bbox(TSD_pos_rois[:, 1:],
-                                     TSD_bbox_pred_[np.arange(num_pos),
-                                                    TSD_labels[:num_pos]],
-                                     means=target_means,
-                                     stds=target_stds)
+        sibling_head_bboxes = delta2bbox(
+            pos_bboxes,
+            bbox_pred_[np.arange(num_pos), labels[:num_pos]],
+            means=target_means,
+            stds=target_stds)
+        TSD_head_bboxes = delta2bbox(
+            TSD_pos_rois[:, 1:],
+            TSD_bbox_pred_[np.arange(num_pos), TSD_labels[:num_pos]],
+            means=target_means,
+            stds=target_stds)
 
         ious, gious = iou_overlaps(sibling_head_bboxes, pos_gt_bboxes)
         TSD_ious, TSD_gious = iou_overlaps(TSD_head_bboxes, pos_gt_bboxes)

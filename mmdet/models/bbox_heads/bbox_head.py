@@ -5,7 +5,6 @@ from torch.nn.modules.utils import _pair
 
 from mmdet.core import (auto_fp16, bbox_target, delta2bbox, force_fp32,
                         multiclass_nms)
-
 from ..builder import build_loss
 from ..losses import accuracy
 from ..registry import HEADS
@@ -15,6 +14,7 @@ from ..registry import HEADS
 class BBoxHead(nn.Module):
     """Simplest RoI head, with only two fc layers for classification and
     regression respectively"""
+
     def __init__(self,
                  with_avg_pool=False,
                  with_cls=True,
@@ -25,11 +25,12 @@ class BBoxHead(nn.Module):
                  target_means=[0., 0., 0., 0.],
                  target_stds=[0.1, 0.1, 0.2, 0.2],
                  reg_class_agnostic=False,
-                 loss_cls=dict(type='CrossEntropyLoss',
-                               use_sigmoid=False,
-                               loss_weight=1.0),
-                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
-                                loss_weight=1.0)):
+                 loss_cls=dict(
+                     type='CrossEntropyLoss',
+                     use_sigmoid=False,
+                     loss_weight=1.0),
+                 loss_bbox=dict(
+                     type='SmoothL1Loss', beta=1.0, loss_weight=1.0)):
         super(BBoxHead, self).__init__()
         assert with_cls or with_reg
         self.with_avg_pool = with_avg_pool
@@ -85,14 +86,15 @@ class BBoxHead(nn.Module):
         pos_gt_bboxes = [res.pos_gt_bboxes for res in sampling_results]
         pos_gt_labels = [res.pos_gt_labels for res in sampling_results]
         reg_classes = 1 if self.reg_class_agnostic else self.num_classes
-        cls_reg_targets = bbox_target(pos_proposals,
-                                      neg_proposals,
-                                      pos_gt_bboxes,
-                                      pos_gt_labels,
-                                      rcnn_train_cfg,
-                                      reg_classes,
-                                      target_means=self.target_means,
-                                      target_stds=self.target_stds)
+        cls_reg_targets = bbox_target(
+            pos_proposals,
+            neg_proposals,
+            pos_gt_bboxes,
+            pos_gt_labels,
+            rcnn_train_cfg,
+            reg_classes,
+            target_means=self.target_means,
+            target_stds=self.target_stds)
         return cls_reg_targets
 
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))

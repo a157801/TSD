@@ -1,5 +1,4 @@
 from __future__ import division
-
 import json
 import logging
 import numbers
@@ -34,6 +33,7 @@ logger = logging.getLogger('global')
 
 
 class BaseDataLoader(DataLoader):
+
     def __init__(self,
                  dataset,
                  batch_size=1,
@@ -128,6 +128,7 @@ class BaseTransform(object):
         max_size (int): maximum length of the longer edge
         flip (bool): if True, flip the gts
     """
+
     def __init__(self, scales, max_size, flip, flip_p=0.5):
         self.scales = scales
         self.max_size = max_size
@@ -183,6 +184,7 @@ class CaffeCocoTransform(object):
         max_size (int): maximum length of the longer edge
         flip (bool): if True, flip the gts
     """
+
     def __init__(self, scales, max_size, flip, flip_p=0.5):
         self.scales = scales
         self.max_size = max_size
@@ -253,6 +255,7 @@ class BaseDataset(Dataset):
     4. dump to output results, Required
     5. visualize gts or dts to check annotations, Optional
     """
+
     def __init__(self):
         """
         """
@@ -408,6 +411,7 @@ class BaseDataset(Dataset):
             - input (:obj:`dict`): output of model
 
         """
+
         def poly_to_mask(polygons, height, width):
             rles = mask_utils.frPyObjects(polygons, height, width)
             rle = mask_utils.merge(rles)
@@ -450,19 +454,20 @@ class BaseDataset(Dataset):
                 masks = np.asfortranarray(gt_masks[b_ix] > 0.5, dtype=np.uint8)
                 masks = masks.transpose(1, 2, 0)
 
-            vis_one_image(image,
-                          image_name,
-                          output_dir,
-                          bboxes,
-                          classes,
-                          ignores,
-                          masks,
-                          keyps,
-                          dataset=self,
-                          show_class=True,
-                          box_alpha=0.7,
-                          kp_thresh=0.0,
-                          ext=output_ext)
+            vis_one_image(
+                image,
+                image_name,
+                output_dir,
+                bboxes,
+                classes,
+                ignores,
+                masks,
+                keyps,
+                dataset=self,
+                show_class=True,
+                box_alpha=0.7,
+                kp_thresh=0.0,
+                ext=output_ext)
 
     def vis_dt(self, vis_cfg, input):
         """
@@ -510,20 +515,21 @@ class BaseDataset(Dataset):
                 masks = cv2.resize(masks, (image_w, image_h))
                 masks = (masks > mask_thresh).astype(np.uint8)
 
-            vis_one_image(image,
-                          image_name,
-                          output_dir,
-                          bboxes,
-                          classes,
-                          None,
-                          masks,
-                          keyps,
-                          dataset=self,
-                          show_class=True,
-                          box_alpha=0.7,
-                          thresh=bbox_thresh,
-                          kp_thresh=keyp_thresh,
-                          ext=output_ext)
+            vis_one_image(
+                image,
+                image_name,
+                output_dir,
+                bboxes,
+                classes,
+                None,
+                masks,
+                keyps,
+                dataset=self,
+                show_class=True,
+                box_alpha=0.7,
+                thresh=bbox_thresh,
+                kp_thresh=keyp_thresh,
+                ext=output_ext)
 
 
 class RandomColorJitter(object):
@@ -544,15 +550,13 @@ class RandomColorJitter(object):
             hue_factor is chosen uniformly from [-hue, hue] or the given [min, max].
             Should have 0<= hue <= 0.5 or -0.5 <= min <= max <= 0.5.
     """
+
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, prob=0):
         self.brightness = self._check_input(brightness, 'brightness')
         self.contrast = self._check_input(contrast, 'contrast')
         self.saturation = self._check_input(saturation, 'saturation')
-        self.hue = self._check_input(hue,
-                                     'hue',
-                                     center=0,
-                                     bound=(-0.5, 0.5),
-                                     clip_first_on_zero=False)
+        self.hue = self._check_input(
+            hue, 'hue', center=0, bound=(-0.5, 0.5), clip_first_on_zero=False)
         self.prob = prob
 
     def _check_input(self,
@@ -653,8 +657,9 @@ class RandomColorJitter(object):
         hue = params.get('hue', 0.07)
         saturation = params.get('saturation', 0.5)
         prob = params.get('prob', 0.25)
-        return cls(brightness=brightness,
-                   contrast=contrast,
-                   hue=hue,
-                   saturation=saturation,
-                   prob=prob)
+        return cls(
+            brightness=brightness,
+            contrast=contrast,
+            hue=hue,
+            saturation=saturation,
+            prob=prob)

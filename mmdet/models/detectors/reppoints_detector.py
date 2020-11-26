@@ -1,7 +1,6 @@
 import torch
 
 from mmdet.core import bbox2result, bbox_mapping_back, multiclass_nms
-
 from ..registry import DETECTORS
 from .single_stage import SingleStageDetector
 
@@ -13,6 +12,7 @@ class RepPointsDetector(SingleStageDetector):
         This detector is the implementation of:
         - RepPoints detector (https://arxiv.org/pdf/1904.11490)
     """
+
     def __init__(self,
                  backbone,
                  neck,

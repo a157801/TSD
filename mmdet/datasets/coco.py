@@ -9,7 +9,6 @@ from pycocotools.cocoeval import COCOeval
 
 from mmdet.core import eval_recalls
 from mmdet.utils import print_log
-
 from .custom import CustomDataset
 from .registry import DATASETS
 
@@ -109,11 +108,12 @@ class CocoDataset(CustomDataset):
 
         seg_map = img_info['filename'].replace('jpg', 'png')
 
-        ann = dict(bboxes=gt_bboxes,
-                   labels=gt_labels,
-                   bboxes_ignore=gt_bboxes_ignore,
-                   masks=gt_masks_ann,
-                   seg_map=seg_map)
+        ann = dict(
+            bboxes=gt_bboxes,
+            labels=gt_labels,
+            bboxes_ignore=gt_bboxes_ignore,
+            masks=gt_masks_ann,
+            seg_map=seg_map)
 
         return ann
 
@@ -255,11 +255,8 @@ class CocoDataset(CustomDataset):
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
 
-        recalls = eval_recalls(gt_bboxes,
-                               results,
-                               proposal_nums,
-                               iou_thrs,
-                               logger=logger)
+        recalls = eval_recalls(
+            gt_bboxes, results, proposal_nums, iou_thrs, logger=logger)
         ar = recalls.mean(axis=1)
         return ar
 
@@ -337,10 +334,8 @@ class CocoDataset(CustomDataset):
             print_log(msg, logger=logger)
 
             if metric == 'proposal_fast':
-                ar = self.fast_eval_recall(results,
-                                           proposal_nums,
-                                           iou_thrs,
-                                           logger='silent')
+                ar = self.fast_eval_recall(
+                    results, proposal_nums, iou_thrs, logger='silent')
                 log_msg = []
                 for i, num in enumerate(proposal_nums):
                     eval_results['AR@{}'.format(num)] = ar[i]
@@ -354,9 +349,10 @@ class CocoDataset(CustomDataset):
             try:
                 cocoDt = cocoGt.loadRes(result_files[metric])
             except IndexError:
-                print_log('The testing results of the whole dataset is empty.',
-                          logger=logger,
-                          level=logging.ERROR)
+                print_log(
+                    'The testing results of the whole dataset is empty.',
+                    logger=logger,
+                    level=logging.ERROR)
                 break
 
             iou_type = 'bbox' if metric == 'proposal' else metric

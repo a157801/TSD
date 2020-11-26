@@ -7,6 +7,7 @@ from torch.utils.data import BatchSampler, Sampler
 
 
 class DistributedClassAwareSampler(Sampler):
+
     def __init__(self,
                  dataset,
                  num_replicas=None,

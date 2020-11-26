@@ -7,7 +7,6 @@ from torch.nn.modules.batchnorm import _BatchNorm
 from mmdet.ops import (ContextBlock, GeneralizedAttention, build_conv_layer,
                        build_norm_layer)
 from mmdet.utils import get_root_logger
-
 from ..registry import BACKBONES
 
 
@@ -35,21 +34,18 @@ class BasicBlock(nn.Module):
         self.norm1_name, norm1 = build_norm_layer(norm_cfg, planes, postfix=1)
         self.norm2_name, norm2 = build_norm_layer(norm_cfg, planes, postfix=2)
 
-        self.conv1 = build_conv_layer(conv_cfg,
-                                      inplanes,
-                                      planes,
-                                      3,
-                                      stride=stride,
-                                      padding=dilation,
-                                      dilation=dilation,
-                                      bias=False)
+        self.conv1 = build_conv_layer(
+            conv_cfg,
+            inplanes,
+            planes,
+            3,
+            stride=stride,
+            padding=dilation,
+            dilation=dilation,
+            bias=False)
         self.add_module(self.norm1_name, norm1)
-        self.conv2 = build_conv_layer(conv_cfg,
-                                      planes,
-                                      planes,
-                                      3,
-                                      padding=1,
-                                      bias=False)
+        self.conv2 = build_conv_layer(
+            conv_cfg, planes, planes, 3, padding=1, bias=False)
         self.add_module(self.norm2_name, norm2)
 
         self.relu = nn.ReLU(inplace=True)
@@ -135,46 +131,49 @@ class Bottleneck(nn.Module):
 
         self.norm1_name, norm1 = build_norm_layer(norm_cfg, planes, postfix=1)
         self.norm2_name, norm2 = build_norm_layer(norm_cfg, planes, postfix=2)
-        self.norm3_name, norm3 = build_norm_layer(norm_cfg,
-                                                  planes * self.expansion,
-                                                  postfix=3)
+        self.norm3_name, norm3 = build_norm_layer(
+            norm_cfg, planes * self.expansion, postfix=3)
 
-        self.conv1 = build_conv_layer(conv_cfg,
-                                      inplanes,
-                                      planes,
-                                      kernel_size=1,
-                                      stride=self.conv1_stride,
-                                      bias=False)
+        self.conv1 = build_conv_layer(
+            conv_cfg,
+            inplanes,
+            planes,
+            kernel_size=1,
+            stride=self.conv1_stride,
+            bias=False)
         self.add_module(self.norm1_name, norm1)
         fallback_on_stride = False
         if self.with_dcn:
             fallback_on_stride = dcn.pop('fallback_on_stride', False)
         if not self.with_dcn or fallback_on_stride:
-            self.conv2 = build_conv_layer(conv_cfg,
-                                          planes,
-                                          planes,
-                                          kernel_size=3,
-                                          stride=self.conv2_stride,
-                                          padding=dilation,
-                                          dilation=dilation,
-                                          bias=False)
+            self.conv2 = build_conv_layer(
+                conv_cfg,
+                planes,
+                planes,
+                kernel_size=3,
+                stride=self.conv2_stride,
+                padding=dilation,
+                dilation=dilation,
+                bias=False)
         else:
             assert self.conv_cfg is None, 'conv_cfg cannot be None for DCN'
-            self.conv2 = build_conv_layer(dcn,
-                                          planes,
-                                          planes,
-                                          kernel_size=3,
-                                          stride=self.conv2_stride,
-                                          padding=dilation,
-                                          dilation=dilation,
-                                          bias=False)
+            self.conv2 = build_conv_layer(
+                dcn,
+                planes,
+                planes,
+                kernel_size=3,
+                stride=self.conv2_stride,
+                padding=dilation,
+                dilation=dilation,
+                bias=False)
 
         self.add_module(self.norm2_name, norm2)
-        self.conv3 = build_conv_layer(conv_cfg,
-                                      planes,
-                                      planes * self.expansion,
-                                      kernel_size=1,
-                                      bias=False)
+        self.conv3 = build_conv_layer(
+            conv_cfg,
+            planes,
+            planes * self.expansion,
+            kernel_size=1,
+            bias=False)
         self.add_module(self.norm3_name, norm3)
 
         self.relu = nn.ReLU(inplace=True)
@@ -202,6 +201,7 @@ class Bottleneck(nn.Module):
         return getattr(self, self.norm3_name)
 
     def forward(self, x):
+
         def _inner_forward(x):
             identity = x
 
@@ -256,45 +256,48 @@ def make_res_layer(block,
     downsample = None
     if stride != 1 or inplanes != planes * block.expansion:
         downsample = nn.Sequential(
-            build_conv_layer(conv_cfg,
-                             inplanes,
-                             planes * block.expansion,
-                             kernel_size=1,
-                             stride=stride,
-                             bias=False),
+            build_conv_layer(
+                conv_cfg,
+                inplanes,
+                planes * block.expansion,
+                kernel_size=1,
+                stride=stride,
+                bias=False),
             build_norm_layer(norm_cfg, planes * block.expansion)[1],
         )
 
     layers = []
     layers.append(
-        block(inplanes=inplanes,
-              planes=planes,
-              stride=stride,
-              dilation=dilation,
-              downsample=downsample,
-              style=style,
-              with_cp=with_cp,
-              conv_cfg=conv_cfg,
-              norm_cfg=norm_cfg,
-              dcn=dcn,
-              gcb=gcb,
-              gen_attention=gen_attention if
-              (0 in gen_attention_blocks) else None))
+        block(
+            inplanes=inplanes,
+            planes=planes,
+            stride=stride,
+            dilation=dilation,
+            downsample=downsample,
+            style=style,
+            with_cp=with_cp,
+            conv_cfg=conv_cfg,
+            norm_cfg=norm_cfg,
+            dcn=dcn,
+            gcb=gcb,
+            gen_attention=gen_attention if
+            (0 in gen_attention_blocks) else None))
     inplanes = planes * block.expansion
     for i in range(1, blocks):
         layers.append(
-            block(inplanes=inplanes,
-                  planes=planes,
-                  stride=1,
-                  dilation=dilation,
-                  style=style,
-                  with_cp=with_cp,
-                  conv_cfg=conv_cfg,
-                  norm_cfg=norm_cfg,
-                  dcn=dcn,
-                  gcb=gcb,
-                  gen_attention=gen_attention if
-                  (i in gen_attention_blocks) else None))
+            block(
+                inplanes=inplanes,
+                planes=planes,
+                stride=1,
+                dilation=dilation,
+                style=style,
+                with_cp=with_cp,
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                dcn=dcn,
+                gcb=gcb,
+                gen_attention=gen_attention if
+                (i in gen_attention_blocks) else None))
 
     return nn.Sequential(*layers)
 
@@ -437,13 +440,14 @@ class ResNet(nn.Module):
         return getattr(self, self.norm1_name)
 
     def _make_stem_layer(self, in_channels):
-        self.conv1 = build_conv_layer(self.conv_cfg,
-                                      in_channels,
-                                      64,
-                                      kernel_size=7,
-                                      stride=2,
-                                      padding=3,
-                                      bias=False)
+        self.conv1 = build_conv_layer(
+            self.conv_cfg,
+            in_channels,
+            64,
+            kernel_size=7,
+            stride=2,
+            padding=3,
+            bias=False)
         self.norm1_name, norm1 = build_norm_layer(self.norm_cfg, 64, postfix=1)
         self.add_module(self.norm1_name, norm1)
         self.relu = nn.ReLU(inplace=True)

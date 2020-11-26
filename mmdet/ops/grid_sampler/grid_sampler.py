@@ -7,6 +7,7 @@ from . import grid_sampler_cuda
 
 
 class _GridSampler(Function):
+
     @staticmethod
     def forward(ctx, input, grid, mode_enum, padding_mode_enum, align_corners):
 

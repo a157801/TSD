@@ -1,7 +1,6 @@
 import torch.nn as nn
 
 from mmdet.ops import ConvModule
-
 from ..registry import HEADS
 from .bbox_head import BBoxHead
 
@@ -95,15 +94,16 @@ class ConvFCBBoxHead(BBoxHead):
         branch_convs = nn.ModuleList()
         if num_branch_convs > 0:
             for i in range(num_branch_convs):
-                conv_in_channels = (last_layer_dim
-                                    if i == 0 else self.conv_out_channels)
+                conv_in_channels = (
+                    last_layer_dim if i == 0 else self.conv_out_channels)
                 branch_convs.append(
-                    ConvModule(conv_in_channels,
-                               self.conv_out_channels,
-                               3,
-                               padding=1,
-                               conv_cfg=self.conv_cfg,
-                               norm_cfg=self.norm_cfg))
+                    ConvModule(
+                        conv_in_channels,
+                        self.conv_out_channels,
+                        3,
+                        padding=1,
+                        conv_cfg=self.conv_cfg,
+                        norm_cfg=self.norm_cfg))
             last_layer_dim = self.conv_out_channels
         # add branch specific fc layers
         branch_fcs = nn.ModuleList()
@@ -114,8 +114,8 @@ class ConvFCBBoxHead(BBoxHead):
                     or self.num_shared_fcs == 0) and not self.with_avg_pool:
                 last_layer_dim *= self.roi_feat_area
             for i in range(num_branch_fcs):
-                fc_in_channels = (last_layer_dim
-                                  if i == 0 else self.fc_out_channels)
+                fc_in_channels = (
+                    last_layer_dim if i == 0 else self.fc_out_channels)
                 branch_fcs.append(
                     nn.Linear(fc_in_channels, self.fc_out_channels))
             last_layer_dim = self.fc_out_channels
@@ -173,14 +173,16 @@ class ConvFCBBoxHead(BBoxHead):
 
 @HEADS.register_module
 class SharedFCBBoxHead(ConvFCBBoxHead):
+
     def __init__(self, num_fcs=2, fc_out_channels=1024, *args, **kwargs):
         assert num_fcs >= 1
-        super(SharedFCBBoxHead, self).__init__(num_shared_convs=0,
-                                               num_shared_fcs=num_fcs,
-                                               num_cls_convs=0,
-                                               num_cls_fcs=0,
-                                               num_reg_convs=0,
-                                               num_reg_fcs=0,
-                                               fc_out_channels=fc_out_channels,
-                                               *args,
-                                               **kwargs)
+        super(SharedFCBBoxHead, self).__init__(
+            num_shared_convs=0,
+            num_shared_fcs=num_fcs,
+            num_cls_convs=0,
+            num_cls_fcs=0,
+            num_reg_convs=0,
+            num_reg_fcs=0,
+            fc_out_channels=fc_out_channels,
+            *args,
+            **kwargs)

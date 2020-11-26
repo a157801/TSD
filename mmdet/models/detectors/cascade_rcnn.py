@@ -6,7 +6,6 @@ import torch.nn as nn
 from mmdet.core import (bbox2result, bbox2roi, bbox_mapping, build_assigner,
                         build_sampler, merge_aug_bboxes, merge_aug_masks,
                         multiclass_nms)
-
 from .. import builder
 from ..registry import DETECTORS
 from .base import BaseDetector
@@ -15,6 +14,7 @@ from .test_mixins import RPNTestMixin
 
 @DETECTORS.register_module
 class CascadeRCNN(BaseDetector, RPNTestMixin):
+
     def __init__(self,
                  num_stages,
                  backbone,
@@ -195,8 +195,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
             rpn_outs = self.rpn_head(x)
             rpn_loss_inputs = rpn_outs + (gt_bboxes, img_metas,
                                           self.train_cfg.rpn)
-            rpn_losses = self.rpn_head.loss(*rpn_loss_inputs,
-                                            gt_bboxes_ignore=gt_bboxes_ignore)
+            rpn_losses = self.rpn_head.loss(
+                *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rpn_losses)
 
             proposal_cfg = self.train_cfg.get('rpn_proposal',
@@ -215,8 +215,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
             sampling_results = []
             if self.with_bbox or self.with_mask:
                 bbox_assigner = build_assigner(rcnn_train_cfg.assigner)
-                bbox_sampler = build_sampler(rcnn_train_cfg.sampler,
-                                             context=self)
+                bbox_sampler = build_sampler(
+                    rcnn_train_cfg.sampler, context=self)
                 num_imgs = img.size(0)
                 if gt_bboxes_ignore is None:
                     gt_bboxes_ignore = [None for _ in range(num_imgs)]
@@ -269,8 +269,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 loss_bbox = bbox_head.loss(cls_score, bbox_pred, *bbox_targets)
 
             for name, value in loss_bbox.items():
-                losses['s{}.{}'.format(
-                    i, name)] = (value * lw if 'loss' in name else value)
+                losses['s{}.{}'.format(i, name)] = (
+                    value * lw if 'loss' in name else value)
 
             # mask head forward and loss
             if self.with_mask:
@@ -288,13 +288,15 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                     device = bbox_feats.device
                     for res in sampling_results:
                         pos_inds.append(
-                            torch.ones(res.pos_bboxes.shape[0],
-                                       device=device,
-                                       dtype=torch.uint8))
+                            torch.ones(
+                                res.pos_bboxes.shape[0],
+                                device=device,
+                                dtype=torch.uint8))
                         pos_inds.append(
-                            torch.zeros(res.neg_bboxes.shape[0],
-                                        device=device,
-                                        dtype=torch.uint8))
+                            torch.zeros(
+                                res.neg_bboxes.shape[0],
+                                device=device,
+                                dtype=torch.uint8))
                     pos_inds = torch.cat(pos_inds)
                     mask_feats = bbox_feats[pos_inds.type(torch.bool)]
                 mask_head = self.mask_head[i]
@@ -305,8 +307,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                     [res.pos_gt_labels for res in sampling_results])
                 loss_mask = mask_head.loss(mask_pred, mask_targets, pos_labels)
                 for name, value in loss_mask.items():
-                    losses['s{}.{}'.format(
-                        i, name)] = (value * lw if 'loss' in name else value)
+                    losses['s{}.{}'.format(i, name)] = (
+                        value * lw if 'loss' in name else value)
 
             # refine bboxes
             if i < self.num_stages - 1:
@@ -448,8 +450,9 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 segm_result = [[] for _ in range(mask_classes)]
             else:
                 if isinstance(scale_factor, float):  # aspect ratio fixed
-                    _bboxes = (det_bboxes[:, :4] *
-                               scale_factor if rescale else det_bboxes)
+                    _bboxes = (
+                        det_bboxes[:, :4] *
+                        scale_factor if rescale else det_bboxes)
                 else:
                     _bboxes = (
                         det_bboxes[:, :4] *
@@ -488,8 +491,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
         of imgs[0].
         """
         # recompute feats to save memory
-        proposal_list = self.aug_test_rpn(self.extract_feats(imgs), img_metas,
-                                          self.test_cfg.rpn)
+        proposal_list = self.aug_test_rpn(
+            self.extract_feats(imgs), img_metas, self.test_cfg.rpn)
 
         rcnn_test_cfg = self.test_cfg.rcnn
         aug_bboxes = []

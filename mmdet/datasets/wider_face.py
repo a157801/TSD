@@ -33,9 +33,10 @@ class WIDERFaceDataset(XMLDataset):
             height = int(size.find('height').text)
             folder = root.find('folder').text
             img_infos.append(
-                dict(id=img_id,
-                     filename=osp.join(folder, filename),
-                     width=width,
-                     height=height))
+                dict(
+                    id=img_id,
+                    filename=osp.join(folder, filename),
+                    width=width,
+                    height=height))
 
         return img_infos

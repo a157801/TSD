@@ -8,13 +8,13 @@ from torch.nn.modules.utils import _pair
 from mmdet.core import auto_fp16, force_fp32, mask_target
 from mmdet.ops import ConvModule, build_upsample_layer
 from mmdet.ops.carafe import CARAFEPack
-
 from ..builder import build_loss
 from ..registry import HEADS
 
 
 @HEADS.register_module
 class FCNMaskHead(nn.Module):
+
     def __init__(self,
                  num_convs=4,
                  roi_feat_size=14,
@@ -26,9 +26,8 @@ class FCNMaskHead(nn.Module):
                  upsample_cfg=dict(type='deconv', scale_factor=2),
                  conv_cfg=None,
                  norm_cfg=None,
-                 loss_mask=dict(type='CrossEntropyLoss',
-                                use_mask=True,
-                                loss_weight=1.0)):
+                 loss_mask=dict(
+                     type='CrossEntropyLoss', use_mask=True, loss_weight=1.0)):
         super(FCNMaskHead, self).__init__()
         self.upsample_cfg = upsample_cfg.copy()
         if self.upsample_cfg['type'] not in [
@@ -55,42 +54,45 @@ class FCNMaskHead(nn.Module):
 
         self.convs = nn.ModuleList()
         for i in range(self.num_convs):
-            in_channels = (self.in_channels
-                           if i == 0 else self.conv_out_channels)
+            in_channels = (
+                self.in_channels if i == 0 else self.conv_out_channels)
             padding = (self.conv_kernel_size - 1) // 2
             self.convs.append(
-                ConvModule(in_channels,
-                           self.conv_out_channels,
-                           self.conv_kernel_size,
-                           padding=padding,
-                           conv_cfg=conv_cfg,
-                           norm_cfg=norm_cfg))
-        upsample_in_channels = (self.conv_out_channels
-                                if self.num_convs > 0 else in_channels)
+                ConvModule(
+                    in_channels,
+                    self.conv_out_channels,
+                    self.conv_kernel_size,
+                    padding=padding,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg))
+        upsample_in_channels = (
+            self.conv_out_channels if self.num_convs > 0 else in_channels)
         upsample_cfg_ = self.upsample_cfg.copy()
         if self.upsample_method is None:
             self.upsample = None
         elif self.upsample_method == 'deconv':
-            upsample_cfg_.update(in_channels=upsample_in_channels,
-                                 out_channels=self.conv_out_channels,
-                                 kernel_size=self.scale_factor,
-                                 stride=self.scale_factor)
+            upsample_cfg_.update(
+                in_channels=upsample_in_channels,
+                out_channels=self.conv_out_channels,
+                kernel_size=self.scale_factor,
+                stride=self.scale_factor)
         elif self.upsample_method == 'carafe':
-            upsample_cfg_.update(channels=upsample_in_channels,
-                                 scale_factor=self.scale_factor)
+            upsample_cfg_.update(
+                channels=upsample_in_channels, scale_factor=self.scale_factor)
         else:
             # suppress warnings
             align_corners = (None
                              if self.upsample_method == 'nearest' else False)
-            upsample_cfg_.update(scale_factor=self.scale_factor,
-                                 mode=self.upsample_method,
-                                 align_corners=align_corners)
+            upsample_cfg_.update(
+                scale_factor=self.scale_factor,
+                mode=self.upsample_method,
+                align_corners=align_corners)
         self.upsample = build_upsample_layer(upsample_cfg_)
 
         out_channels = 1 if self.class_agnostic else self.num_classes
-        logits_in_channel = (self.conv_out_channels
-                             if self.upsample_method == 'deconv' else
-                             upsample_in_channels)
+        logits_in_channel = (
+            self.conv_out_channels
+            if self.upsample_method == 'deconv' else upsample_in_channels)
         self.conv_logits = nn.Conv2d(logits_in_channel, out_channels, 1)
         self.relu = nn.ReLU(inplace=True)
         self.debug_imgs = None
@@ -102,9 +104,8 @@ class FCNMaskHead(nn.Module):
             elif isinstance(m, CARAFEPack):
                 m.init_weights()
             else:
-                nn.init.kaiming_normal_(m.weight,
-                                        mode='fan_out',
-                                        nonlinearity='relu')
+                nn.init.kaiming_normal_(
+                    m.weight, mode='fan_out', nonlinearity='relu')
                 nn.init.constant_(m.bias, 0)
 
     @auto_fp16()
