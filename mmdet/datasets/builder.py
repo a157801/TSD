@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from mmdet.utils import build_from_cfg
 from .dataset_wrappers import ConcatDataset, RepeatDataset
 from .registry import DATASETS
-from .samplers import DistributedGroupSampler, DistributedSampler, GroupSampler
+from .samplers import DistributedGroupSampler, DistributedSampler, GroupSampler, DistributedClassAwareSampler
 
 if platform.system() != 'Windows':
     # https://github.com/pytorch/pytorch/issues/973
@@ -65,6 +65,8 @@ def build_dataloader(dataset,
                      dist=True,
                      shuffle=True,
                      seed=None,
+                     class_aware_sampling=False,
+                     class_sample_path=None,
                      **kwargs):
     """Build PyTorch DataLoader.
 
@@ -90,7 +92,9 @@ def build_dataloader(dataset,
     if dist:
         # DistributedGroupSampler will definitely shuffle the data to satisfy
         # that images on each GPU are in the same group
-        if shuffle:
+        if class_aware_sampling:
+            sampler = DistributedClassAwareSampler(dataset, world_size, rank, class_sample_path)
+        elif shuffle:
             sampler = DistributedGroupSampler(dataset, imgs_per_gpu,
                                               world_size, rank)
         else:

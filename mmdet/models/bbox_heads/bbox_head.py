@@ -45,6 +45,7 @@ class BBoxHead(nn.Module):
         self.reg_class_agnostic = reg_class_agnostic
         self.fp16_enabled = False
 
+        self.loss_cls_type = loss_cls['type']
         self.loss_cls = build_loss(loss_cls)
         self.loss_bbox = build_loss(loss_bbox)
 
@@ -107,15 +108,21 @@ class BBoxHead(nn.Module):
              reduction_override=None):
         losses = dict()
         if cls_score is not None:
-            avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)
-            if cls_score.numel() > 0:
-                losses['loss_cls'] = self.loss_cls(
-                    cls_score,
-                    labels,
-                    label_weights,
-                    avg_factor=avg_factor,
-                    reduction_override=reduction_override)
-                losses['acc'] = accuracy(cls_score, labels)
+            if self.loss_cls_type == 'CrossEntropyLoss':
+                avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)
+                if cls_score.numel() > 0:
+                    losses['loss_cls'] = self.loss_cls(
+                        cls_score,
+                        labels,
+                        label_weights,
+                        avg_factor=avg_factor,
+                        reduction_override=reduction_override)
+            elif self.loss_cls_type == 'TrunCrossEntropyLoss':
+                losses['loss_cls'] = self.loss_cls(cls_score, labels)
+            else:
+                raise NotImplementedError
+
+            losses['acc'] = accuracy(cls_score, labels)
         if bbox_pred is not None:
             pos_inds = labels > 0
             if pos_inds.any():

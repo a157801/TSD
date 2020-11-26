@@ -49,6 +49,7 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
     """
     model.eval()
     results = []
+    metas = []
     dataset = data_loader.dataset
     rank, world_size = get_dist_info()
     if rank == 0:
@@ -57,6 +58,7 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
         results.append(result)
+        metas.append(data['img_metas'])
 
         if rank == 0:
             batch_size = data['img'][0].size(0)
@@ -68,7 +70,9 @@ def multi_gpu_test(model, data_loader, tmpdir=None, gpu_collect=False):
         results = collect_results_gpu(results, len(dataset))
     else:
         results = collect_results_cpu(results, len(dataset), tmpdir)
-    return results
+    dist.barrier()
+    metas = collect_results_cpu(metas, len(dataset), tmpdir)
+    return results, metas
 
 
 def collect_results_cpu(result_part, size, tmpdir=None):

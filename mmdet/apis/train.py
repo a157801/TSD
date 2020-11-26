@@ -100,7 +100,9 @@ def train_detector(model,
             # cfg.gpus will be ignored if distributed
             len(cfg.gpu_ids),
             dist=distributed,
-            seed=cfg.seed) for ds in dataset
+            seed=cfg.seed,
+            class_aware_sampling=cfg.data.get('class_aware_sampling', False),
+            class_sample_path=cfg.data.get('class_sample_path', None)) for ds in dataset
     ]
 
     # put model on gpus

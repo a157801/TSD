@@ -42,7 +42,8 @@ class CustomDataset(Dataset):
                  seg_prefix=None,
                  proposal_file=None,
                  test_mode=False,
-                 filter_empty_gt=True):
+                 filter_empty_gt=True,
+                 class_tree_path=None):
         self.ann_file = ann_file
         self.data_root = data_root
         self.img_prefix = img_prefix
@@ -103,6 +104,8 @@ class CustomDataset(Dataset):
 
     def _filter_imgs(self, min_size=32):
         """Filter images too small."""
+        if isinstance(self.img_infos[0], list):
+            return [i for i in range(len(self.img_infos))]
         valid_inds = []
         for i, img_info in enumerate(self.img_infos):
             if min(img_info['width'], img_info['height']) >= min_size:
@@ -115,6 +118,8 @@ class CustomDataset(Dataset):
         Images with aspect ratio greater than 1 will be set as group 1,
         otherwise group 0.
         """
+        if isinstance(self.img_infos[0], list):
+            return
         self.flag = np.zeros(len(self), dtype=np.uint8)
         for i in range(len(self)):
             img_info = self.img_infos[i]

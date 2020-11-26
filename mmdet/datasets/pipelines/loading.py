@@ -20,7 +20,12 @@ class LoadImageFromFile(object):
                                 results['img_info']['filename'])
         else:
             filename = results['img_info']['filename']
-        img = mmcv.imread(filename, self.color_type)
+        try:
+            img = mmcv.imread(filename, self.color_type)
+            if img is None:
+                img = np.zeros((224,224,3),dtype=np.uint8)
+        except:
+            img = np.zeros((224,224,3),dtype=np.uint8)
         if self.to_float32:
             img = img.astype(np.float32)
         results['filename'] = filename
@@ -83,16 +88,29 @@ class LoadAnnotations(object):
                  with_label=True,
                  with_mask=False,
                  with_seg=False,
-                 poly2mask=True):
+                 poly2mask=True,
+                 normed_bbox=False):
         self.with_bbox = with_bbox
         self.with_label = with_label
         self.with_mask = with_mask
         self.with_seg = with_seg
         self.poly2mask = poly2mask
+        self.normed_bbox = normed_bbox
 
     def _load_bboxes(self, results):
         ann_info = results['ann_info']
         results['gt_bboxes'] = ann_info['bboxes']
+        if self.normed_bbox:
+            # h, w = results['img_info']['height'], results['img_info']['width']
+            h, w = results['img_shape'][:2]
+            bbox_num = results['gt_bboxes'].shape[0]
+            if bbox_num != 0:
+                results['gt_bboxes'][:, 0] *= w
+                results['gt_bboxes'][:, 1] *= h
+                results['gt_bboxes'][:, 2] *= w
+                results['gt_bboxes'][:, 3] *= h
+            results['gt_bboxes'] = results['gt_bboxes'].astype(np.float32)
+
 
         gt_bboxes_ignore = ann_info.get('bboxes_ignore', None)
         if gt_bboxes_ignore is not None:
