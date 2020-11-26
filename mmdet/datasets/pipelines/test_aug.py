@@ -6,7 +6,6 @@ from .compose import Compose
 
 @PIPELINES.register_module
 class MultiScaleFlipAug(object):
-
     def __init__(self, transforms, img_scale, flip=False):
         self.transforms = Compose(transforms)
         self.img_scale = img_scale if isinstance(img_scale,

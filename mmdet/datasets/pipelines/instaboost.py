@@ -10,7 +10,6 @@ class InstaBoost(object):
     Segmentation Via Probability Map Guided Copy-Pasting"
     Implementation details can refer to https://github.com/GothicAi/Instaboost.
     """
-
     def __init__(self,
                  action_candidate=('normal', 'horizontal', 'skip'),
                  action_prob=(1, 0, 0),
@@ -80,8 +79,10 @@ class InstaBoost(object):
             except ImportError:
                 raise ImportError('Please run "pip install instaboostfast" '
                                   'to install instaboostfast first.')
-            anns, img = instaboost.get_new_data(
-                anns, img, self.cfg, background=None)
+            anns, img = instaboost.get_new_data(anns,
+                                                img,
+                                                self.cfg,
+                                                background=None)
         results = self._parse_anns(results, anns, img)
         return results
 

@@ -74,13 +74,12 @@ def voc_eval_with_return(result_file,
         dataset_name = 'voc07'
     else:
         dataset_name = dataset.CLASSES
-    mean_ap, eval_results = eval_map(
-        det_results,
-        annotations,
-        scale_ranges=None,
-        iou_thr=iou_thr,
-        dataset=dataset_name,
-        logger=logger)
+    mean_ap, eval_results = eval_map(det_results,
+                                     annotations,
+                                     scale_ranges=None,
+                                     iou_thr=iou_thr,
+                                     dataset=dataset_name,
+                                     logger=logger)
 
     if only_ap:
         eval_results = [{
@@ -144,8 +143,9 @@ def collect_results(result_part, size, tmpdir=None):
                                 device='cuda')
         if rank == 0:
             tmpdir = tempfile.mkdtemp()
-            tmpdir = torch.tensor(
-                bytearray(tmpdir.encode()), dtype=torch.uint8, device='cuda')
+            tmpdir = torch.tensor(bytearray(tmpdir.encode()),
+                                  dtype=torch.uint8,
+                                  device='cuda')
             dir_tensor[:len(tmpdir)] = tmpdir
         dist.broadcast(dir_tensor, 0)
         tmpdir = dir_tensor.cpu().numpy().tobytes().decode().rstrip()
@@ -193,46 +193,44 @@ def parse_args():
             'spatter', 'saturate'
         ],
         help='corruptions')
-    parser.add_argument(
-        '--severities',
-        type=int,
-        nargs='+',
-        default=[0, 1, 2, 3, 4, 5],
-        help='corruption severity levels')
+    parser.add_argument('--severities',
+                        type=int,
+                        nargs='+',
+                        default=[0, 1, 2, 3, 4, 5],
+                        help='corruption severity levels')
     parser.add_argument(
         '--eval',
         type=str,
         nargs='+',
         choices=['proposal', 'proposal_fast', 'bbox', 'segm', 'keypoints'],
         help='eval types')
-    parser.add_argument(
-        '--iou-thr',
-        type=float,
-        default=0.5,
-        help='IoU threshold for pascal voc evaluation')
+    parser.add_argument('--iou-thr',
+                        type=float,
+                        default=0.5,
+                        help='IoU threshold for pascal voc evaluation')
     parser.add_argument(
         '--summaries',
         type=bool,
         default=False,
         help='Print summaries for every corruption and severity')
-    parser.add_argument(
-        '--workers', type=int, default=32, help='workers per gpu')
+    parser.add_argument('--workers',
+                        type=int,
+                        default=32,
+                        help='workers per gpu')
     parser.add_argument('--show', action='store_true', help='show results')
     parser.add_argument('--tmpdir', help='tmp dir for writing some results')
     parser.add_argument('--seed', type=int, default=None, help='random seed')
-    parser.add_argument(
-        '--launcher',
-        choices=['none', 'pytorch', 'slurm', 'mpi'],
-        default='none',
-        help='job launcher')
+    parser.add_argument('--launcher',
+                        choices=['none', 'pytorch', 'slurm', 'mpi'],
+                        default='none',
+                        help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument(
-        '--final-prints',
-        type=str,
-        nargs='+',
-        choices=['P', 'mPC', 'rPC'],
-        default='mPC',
-        help='corruption benchmark metric to print at the end')
+    parser.add_argument('--final-prints',
+                        type=str,
+                        nargs='+',
+                        choices=['P', 'mPC', 'rPC'],
+                        default='mPC',
+                        help='corruption benchmark metric to print at the end')
     parser.add_argument(
         '--final-prints-aggregate',
         type=str,
@@ -324,10 +322,9 @@ def main():
             test_data_cfg = copy.deepcopy(cfg.data.test)
             # assign corruption and severity
             if corruption_severity > 0:
-                corruption_trans = dict(
-                    type='Corrupt',
-                    corruption=corruption,
-                    severity=corruption_severity)
+                corruption_trans = dict(type='Corrupt',
+                                        corruption=corruption,
+                                        severity=corruption_severity)
                 # TODO: hard coded "1", we assume that the first step is
                 # loading images, which needs to be fixed in the future
                 test_data_cfg['pipeline'].insert(1, corruption_trans)
@@ -340,21 +337,22 @@ def main():
             # TODO: support multiple images per gpu
             #       (only minor changes are needed)
             dataset = build_dataset(test_data_cfg)
-            data_loader = build_dataloader(
-                dataset,
-                imgs_per_gpu=1,
-                workers_per_gpu=args.workers,
-                dist=distributed,
-                shuffle=False)
+            data_loader = build_dataloader(dataset,
+                                           imgs_per_gpu=1,
+                                           workers_per_gpu=args.workers,
+                                           dist=distributed,
+                                           shuffle=False)
 
             # build the model and load checkpoint
-            model = build_detector(
-                cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+            model = build_detector(cfg.model,
+                                   train_cfg=None,
+                                   test_cfg=cfg.test_cfg)
             fp16_cfg = cfg.get('fp16', None)
             if fp16_cfg is not None:
                 wrap_fp16_model(model)
-            checkpoint = load_checkpoint(
-                model, args.checkpoint, map_location='cpu')
+            checkpoint = load_checkpoint(model,
+                                         args.checkpoint,
+                                         map_location='cpu')
             # old versions did not save class info in checkpoints,
             # this walkaround is for backward compatibility
             if 'CLASSES' in checkpoint['meta']:
@@ -373,9 +371,9 @@ def main():
                 outputs = multi_gpu_test(model, data_loader, args.tmpdir)
 
             if args.out and rank == 0:
-                eval_results_filename = (
-                    osp.splitext(args.out)[0] + '_results' +
-                    osp.splitext(args.out)[1])
+                eval_results_filename = (osp.splitext(args.out)[0] +
+                                         '_results' +
+                                         osp.splitext(args.out)[1])
                 mmcv.dump(outputs, args.out)
                 eval_types = args.eval
                 if cfg.dataset_type == 'VOCDataset':
@@ -430,17 +428,15 @@ def main():
         aggregate = args.final_prints_aggregate
 
         if cfg.dataset_type == 'VOCDataset':
-            get_results(
-                eval_results_filename,
-                dataset='voc',
-                prints=prints,
-                aggregate=aggregate)
+            get_results(eval_results_filename,
+                        dataset='voc',
+                        prints=prints,
+                        aggregate=aggregate)
         else:
-            get_results(
-                eval_results_filename,
-                dataset='coco',
-                prints=prints,
-                aggregate=aggregate)
+            get_results(eval_results_filename,
+                        dataset='coco',
+                        prints=prints,
+                        aggregate=aggregate)
 
 
 if __name__ == '__main__':

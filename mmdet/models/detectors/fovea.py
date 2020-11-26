@@ -4,7 +4,6 @@ from .single_stage import SingleStageDetector
 
 @DETECTORS.register_module
 class FOVEA(SingleStageDetector):
-
     def __init__(self,
                  backbone,
                  neck,

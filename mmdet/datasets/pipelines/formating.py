@@ -31,7 +31,6 @@ def to_tensor(data):
 
 @PIPELINES.register_module
 class ToTensor(object):
-
     def __init__(self, keys):
         self.keys = keys
 
@@ -46,7 +45,6 @@ class ToTensor(object):
 
 @PIPELINES.register_module
 class ImageToTensor(object):
-
     def __init__(self, keys):
         self.keys = keys
 
@@ -64,7 +62,6 @@ class ImageToTensor(object):
 
 @PIPELINES.register_module
 class Transpose(object):
-
     def __init__(self, keys, order):
         self.keys = keys
         self.order = order
@@ -81,7 +78,6 @@ class Transpose(object):
 
 @PIPELINES.register_module
 class ToDataContainer(object):
-
     def __init__(self,
                  fields=(dict(key='img', stack=True), dict(key='gt_bboxes'),
                          dict(key='gt_labels'))):
@@ -115,7 +111,6 @@ class DefaultFormatBundle(object):
     - gt_semantic_seg: (1)unsqueeze dim-0 (2)to tensor,
                        (3)to DataContainer (stack=True)
     """
-
     def __call__(self, results):
         if 'img' in results:
             img = results['img']
@@ -130,8 +125,9 @@ class DefaultFormatBundle(object):
         if 'gt_masks' in results:
             results['gt_masks'] = DC(results['gt_masks'], cpu_only=True)
         if 'gt_semantic_seg' in results:
-            results['gt_semantic_seg'] = DC(
-                to_tensor(results['gt_semantic_seg'][None, ...]), stack=True)
+            results['gt_semantic_seg'] = DC(to_tensor(
+                results['gt_semantic_seg'][None, ...]),
+                                            stack=True)
         return results
 
     def __repr__(self):
@@ -169,7 +165,6 @@ class Collect(object):
             - std - per channel std divisor
             - to_rgb - bool indicating if bgr was converted to rgb
     """
-
     def __init__(self,
                  keys,
                  meta_keys=('filename', 'ori_shape', 'img_shape', 'pad_shape',
@@ -213,7 +208,6 @@ class WrapFieldsToLists(object):
         >>>    dict(type='WrapIntoLists')
         >>> ]
     """
-
     def __call__(self, results):
         # Wrap dict fields into lists
         for key, val in results.items():

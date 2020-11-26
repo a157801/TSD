@@ -47,7 +47,6 @@ def init_detector(config, checkpoint=None, device='cuda:0'):
 
 
 class LoadImage(object):
-
     def __call__(self, results):
         if isinstance(results['img'], str):
             results['filename'] = results['img']
@@ -171,15 +170,14 @@ def show_result(img,
     if out_file is not None:
         show = False
     # draw bounding boxes
-    mmcv.imshow_det_bboxes(
-        img,
-        bboxes,
-        labels,
-        class_names=class_names,
-        score_thr=score_thr,
-        show=show,
-        wait_time=wait_time,
-        out_file=out_file)
+    mmcv.imshow_det_bboxes(img,
+                           bboxes,
+                           labels,
+                           class_names=class_names,
+                           score_thr=score_thr,
+                           show=show,
+                           wait_time=wait_time,
+                           out_file=out_file)
     if not (show or out_file):
         return img
 
@@ -201,7 +199,10 @@ def show_result_pyplot(img,
         out_file (str, optional): If specified, the visualization result will
             be written to the out file instead of shown in a window.
     """
-    img = show_result(
-        img, result, class_names, score_thr=score_thr, show=False)
+    img = show_result(img,
+                      result,
+                      class_names,
+                      score_thr=score_thr,
+                      show=False)
     plt.figure(figsize=fig_size)
     plt.imshow(mmcv.bgr2rgb(img))

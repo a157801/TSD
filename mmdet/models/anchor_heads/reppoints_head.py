@@ -8,6 +8,7 @@ from mmcv.cnn import normal_init
 from mmdet.core import (PointGenerator, multi_apply, multiclass_nms,
                         point_target)
 from mmdet.ops import ConvModule, DeformConv
+
 from ..builder import build_loss
 from ..registry import HEADS
 from ..utils import bias_init_with_prob
@@ -47,16 +48,17 @@ class RepPointsHead(nn.Module):
                  point_base_scale=4,
                  conv_cfg=None,
                  norm_cfg=None,
-                 loss_cls=dict(
-                     type='FocalLoss',
-                     use_sigmoid=True,
-                     gamma=2.0,
-                     alpha=0.25,
-                     loss_weight=1.0),
-                 loss_bbox_init=dict(
-                     type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=0.5),
-                 loss_bbox_refine=dict(
-                     type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0),
+                 loss_cls=dict(type='FocalLoss',
+                               use_sigmoid=True,
+                               gamma=2.0,
+                               alpha=0.25,
+                               loss_weight=1.0),
+                 loss_bbox_init=dict(type='SmoothL1Loss',
+                                     beta=1.0 / 9.0,
+                                     loss_weight=0.5),
+                 loss_bbox_refine=dict(type='SmoothL1Loss',
+                                       beta=1.0 / 9.0,
+                                       loss_weight=1.0),
                  use_grid_points=False,
                  center_init=True,
                  transform_method='moment',
@@ -82,8 +84,8 @@ class RepPointsHead(nn.Module):
         self.center_init = center_init
         self.transform_method = transform_method
         if self.transform_method == 'moment':
-            self.moment_transfer = nn.Parameter(
-                data=torch.zeros(2), requires_grad=True)
+            self.moment_transfer = nn.Parameter(data=torch.zeros(2),
+                                                requires_grad=True)
             self.moment_mul = moment_mul
         if self.use_sigmoid_cls:
             self.cls_out_channels = self.num_classes - 1
@@ -113,23 +115,21 @@ class RepPointsHead(nn.Module):
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
             self.cls_convs.append(
-                ConvModule(
-                    chn,
-                    self.feat_channels,
-                    3,
-                    stride=1,
-                    padding=1,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg))
+                ConvModule(chn,
+                           self.feat_channels,
+                           3,
+                           stride=1,
+                           padding=1,
+                           conv_cfg=self.conv_cfg,
+                           norm_cfg=self.norm_cfg))
             self.reg_convs.append(
-                ConvModule(
-                    chn,
-                    self.feat_channels,
-                    3,
-                    stride=1,
-                    padding=1,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg))
+                ConvModule(chn,
+                           self.feat_channels,
+                           3,
+                           stride=1,
+                           padding=1,
+                           conv_cfg=self.conv_cfg,
+                           norm_cfg=self.norm_cfg))
         pts_out_dim = 4 if self.use_grid_points else 2 * self.num_points
         self.reppoints_cls_conv = DeformConv(self.feat_channels,
                                              self.point_feat_channels,
@@ -377,27 +377,27 @@ class RepPointsHead(nn.Module):
         label_weights = label_weights.reshape(-1)
         cls_score = cls_score.permute(0, 2, 3,
                                       1).reshape(-1, self.cls_out_channels)
-        loss_cls = self.loss_cls(
-            cls_score,
-            labels,
-            label_weights,
-            avg_factor=num_total_samples_refine)
+        loss_cls = self.loss_cls(cls_score,
+                                 labels,
+                                 label_weights,
+                                 avg_factor=num_total_samples_refine)
 
         # points loss
         bbox_gt_init = bbox_gt_init.reshape(-1, 4)
         bbox_weights_init = bbox_weights_init.reshape(-1, 4)
-        bbox_pred_init = self.points2bbox(
-            pts_pred_init.reshape(-1, 2 * self.num_points), y_first=False)
+        bbox_pred_init = self.points2bbox(pts_pred_init.reshape(
+            -1, 2 * self.num_points),
+                                          y_first=False)
         bbox_gt_refine = bbox_gt_refine.reshape(-1, 4)
         bbox_weights_refine = bbox_weights_refine.reshape(-1, 4)
-        bbox_pred_refine = self.points2bbox(
-            pts_pred_refine.reshape(-1, 2 * self.num_points), y_first=False)
+        bbox_pred_refine = self.points2bbox(pts_pred_refine.reshape(
+            -1, 2 * self.num_points),
+                                            y_first=False)
         normalize_term = self.point_base_scale * stride
-        loss_pts_init = self.loss_bbox_init(
-            bbox_pred_init / normalize_term,
-            bbox_gt_init / normalize_term,
-            bbox_weights_init,
-            avg_factor=num_total_samples_init)
+        loss_pts_init = self.loss_bbox_init(bbox_pred_init / normalize_term,
+                                            bbox_gt_init / normalize_term,
+                                            bbox_weights_init,
+                                            avg_factor=num_total_samples_init)
         loss_pts_refine = self.loss_bbox_refine(
             bbox_pred_refine / normalize_term,
             bbox_gt_refine / normalize_term,
@@ -443,9 +443,8 @@ class RepPointsHead(nn.Module):
             sampling=self.sampling)
         (*_, bbox_gt_list_init, candidate_list_init, bbox_weights_list_init,
          num_total_pos_init, num_total_neg_init) = cls_reg_targets_init
-        num_total_samples_init = (
-            num_total_pos_init +
-            num_total_neg_init if self.sampling else num_total_pos_init)
+        num_total_samples_init = (num_total_pos_init + num_total_neg_init
+                                  if self.sampling else num_total_pos_init)
 
         # target for refinement stage
         center_list, valid_flag_list = self.get_points(featmap_sizes,
@@ -477,9 +476,8 @@ class RepPointsHead(nn.Module):
         (labels_list, label_weights_list, bbox_gt_list_refine,
          candidate_list_refine, bbox_weights_list_refine, num_total_pos_refine,
          num_total_neg_refine) = cls_reg_targets_refine
-        num_total_samples_refine = (
-            num_total_pos_refine +
-            num_total_neg_refine if self.sampling else num_total_pos_refine)
+        num_total_samples_refine = (num_total_pos_refine + num_total_neg_refine
+                                    if self.sampling else num_total_pos_refine)
 
         # compute loss
         losses_cls, losses_pts_init, losses_pts_refine = multi_apply(

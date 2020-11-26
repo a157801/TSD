@@ -5,7 +5,6 @@ from .random_sampler import RandomSampler
 
 
 class InstanceBalancedPosSampler(RandomSampler):
-
     def _sample_pos(self, assign_result, num_expected, **kwargs):
         pos_inds = torch.nonzero(assign_result.gt_inds > 0)
         if pos_inds.numel() != 0:

@@ -8,7 +8,6 @@ from . import deform_pool_cuda
 
 
 class DeformRoIPoolingFunction(Function):
-
     @staticmethod
     def forward(ctx,
                 data,
@@ -80,7 +79,6 @@ deform_roi_pooling = DeformRoIPoolingFunction.apply
 
 
 class DeformRoIPooling(nn.Module):
-
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -111,7 +109,6 @@ class DeformRoIPooling(nn.Module):
 
 
 class DeformRoIPoolingPack(DeformRoIPooling):
-
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -175,7 +172,6 @@ class DeformRoIPoolingPack(DeformRoIPooling):
 
 
 class ModulatedDeformRoIPoolingPack(DeformRoIPooling):
-
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -257,8 +253,8 @@ class ModulatedDeformRoIPoolingPack(DeformRoIPooling):
                 self.out_channels, self.no_trans, self.group_size,
                 self.part_size, self.sample_per_part, self.trans_std) * mask
 
-class DeltaRPooling(DeformRoIPooling):
 
+class DeltaRPooling(DeformRoIPooling):
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -289,18 +285,19 @@ class DeltaRPooling(DeformRoIPooling):
                                       self.trans_std)
         else:
             n = rois.shape[0]
-            offset_tmp = delta_r.view(n, 2, 1, 1).repeat(1,1,self.out_size,self.out_size)
+            offset_tmp = delta_r.view(n, 2, 1,
+                                      1).repeat(1, 1, self.out_size,
+                                                self.out_size)
             rois_new = rois.contiguous()
 
-            return deform_roi_pooling(data, rois_new, offset_tmp, self.spatial_scale,
-                                      self.out_size, self.out_channels,
-                                      self.no_trans, self.group_size,
-                                      self.part_size, self.sample_per_part,
-                                      self.trans_std)
+            return deform_roi_pooling(data, rois_new, offset_tmp,
+                                      self.spatial_scale, self.out_size,
+                                      self.out_channels, self.no_trans,
+                                      self.group_size, self.part_size,
+                                      self.sample_per_part, self.trans_std)
 
 
 class DeltaCPooling(DeformRoIPooling):
-
     def __init__(self,
                  spatial_scale,
                  out_size,
@@ -334,8 +331,8 @@ class DeltaCPooling(DeformRoIPooling):
             offset_tmp = delta_c.view(n, 2, self.out_size, self.out_size)
             rois_new = rois.contiguous()
 
-            return deform_roi_pooling(data, rois_new, offset_tmp, self.spatial_scale,
-                                      self.out_size, self.out_channels,
-                                      self.no_trans, self.group_size,
-                                      self.part_size, self.sample_per_part,
-                                      self.trans_std)                
+            return deform_roi_pooling(data, rois_new, offset_tmp,
+                                      self.spatial_scale, self.out_size,
+                                      self.out_channels, self.no_trans,
+                                      self.group_size, self.part_size,
+                                      self.sample_per_part, self.trans_std)

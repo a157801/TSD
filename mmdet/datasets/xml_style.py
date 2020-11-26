@@ -10,7 +10,6 @@ from .registry import DATASETS
 
 @DATASETS.register_module
 class XMLDataset(CustomDataset):
-
     def __init__(self, min_size=None, **kwargs):
         super(XMLDataset, self).__init__(**kwargs)
         self.cat2label = {cat: i + 1 for i, cat in enumerate(self.CLASSES)}
@@ -79,9 +78,8 @@ class XMLDataset(CustomDataset):
         else:
             bboxes_ignore = np.array(bboxes_ignore, ndmin=2) - 1
             labels_ignore = np.array(labels_ignore)
-        ann = dict(
-            bboxes=bboxes.astype(np.float32),
-            labels=labels.astype(np.int64),
-            bboxes_ignore=bboxes_ignore.astype(np.float32),
-            labels_ignore=labels_ignore.astype(np.int64))
+        ann = dict(bboxes=bboxes.astype(np.float32),
+                   labels=labels.astype(np.int64),
+                   bboxes_ignore=bboxes_ignore.astype(np.float32),
+                   labels_ignore=labels_ignore.astype(np.int64))
         return ann

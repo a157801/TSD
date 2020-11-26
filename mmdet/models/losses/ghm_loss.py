@@ -10,8 +10,9 @@ def _expand_binary_labels(labels, label_weights, label_channels):
     inds = torch.nonzero(labels >= 1).squeeze()
     if inds.numel() > 0:
         bin_labels[inds, labels[inds] - 1] = 1
-    bin_label_weights = label_weights.view(-1, 1).expand(
-        label_weights.size(0), label_channels)
+    bin_label_weights = label_weights.view(-1,
+                                           1).expand(label_weights.size(0),
+                                                     label_channels)
     return bin_labels, bin_label_weights
 
 
@@ -30,7 +31,6 @@ class GHMC(nn.Module):
         use_sigmoid (bool): Can only be true for BCE based loss now.
         loss_weight (float): The weight of the total GHM-C loss.
     """
-
     def __init__(self, bins=10, momentum=0, use_sigmoid=True, loss_weight=1.0):
         super(GHMC, self).__init__()
         self.bins = bins
@@ -108,7 +108,6 @@ class GHMR(nn.Module):
         momentum (float): The parameter for moving average.
         loss_weight (float): The weight of the total GHM-R loss.
     """
-
     def __init__(self, mu=0.02, bins=10, momentum=0, loss_weight=1.0):
         super(GHMR, self).__init__()
         self.mu = mu

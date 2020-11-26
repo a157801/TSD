@@ -1,13 +1,13 @@
-from abc import ABCMeta
-from abc import abstractmethod
 import collections
 import logging
-import numpy as np
-import time
 import os
+import time
+from abc import ABCMeta, abstractmethod
 
-from . import metrics
-from . import per_image_evaluation
+import numpy as np
+
+from . import metrics, per_image_evaluation
+
 
 def get_categories(file_name):
     categories = []
@@ -18,11 +18,15 @@ def get_categories(file_name):
         categories.append({'id': int(vals[2]), 'name': vals[1]})
     return categories
 
+
 def read_gts(label_dir, gt_need_father=True):
-    file_name = os.path.join(label_dir, 'challenge-2019-validation-detection-bbox.txt')
+    file_name = os.path.join(label_dir,
+                             'challenge-2019-validation-detection-bbox.txt')
     print('\tGet gts: {0} ...'.format(file_name))
     if gt_need_father:
-        class_label_tree = np.load(os.path.join(label_dir, 'class_label_tree.np'),allow_pickle=True)
+        class_label_tree = np.load(os.path.join(label_dir,
+                                                'class_label_tree.np'),
+                                   allow_pickle=True)
     st = time.time()
     gts = {}
     with open(file_name) as f:
@@ -45,7 +49,12 @@ def read_gts(label_dir, gt_need_father=True):
 
         for j in range(img_gt_size):
             vals = lines[i + j].split()
-            box = [float(vals[1]),float(vals[2]), float(vals[3]),float(vals[4])]
+            box = [
+                float(vals[1]),
+                float(vals[2]),
+                float(vals[3]),
+                float(vals[4])
+            ]
             label = int(vals[0])
             group = int(vals[5])
             if gt_need_father:
@@ -62,20 +71,24 @@ def read_gts(label_dir, gt_need_father=True):
         i += img_gt_size
 
         gts[img_name] = {}
-        gts[img_name]['groundtruth_boxes'] = np.array(gt_boxes, dtype=np.float32)
+        gts[img_name]['groundtruth_boxes'] = np.array(gt_boxes,
+                                                      dtype=np.float32)
         gts[img_name]['groundtruth_classes'] = np.array(labels, dtype=np.int32)
         gts[img_name]['verified_labels'] = np.array(neg_clss, dtype=np.int32)
-        gts[img_name]['groundtruth_group_of'] = np.array(is_group, dtype=np.bool)
-
+        gts[img_name]['groundtruth_group_of'] = np.array(is_group,
+                                                         dtype=np.bool)
 
     ed = time.time()
     print('\tGts read, using: {:.2f} s'.format(ed - st))
     return gts
 
+
 def read_dets(file_name, label_dir, det_need_father=True, wh_format=False):
     print('\tGet dets: {0} ...'.format(file_name))
     if det_need_father:
-        class_label_tree = np.load(os.path.join(label_dir, 'class_label_tree.np'),allow_pickle=True)
+        class_label_tree = np.load(os.path.join(label_dir,
+                                                'class_label_tree.np'),
+                                   allow_pickle=True)
     st = time.time()
     dets = {}
     with open(file_name) as f:
@@ -113,13 +126,17 @@ def read_dets(file_name, label_dir, det_need_father=True, wh_format=False):
         dets[img_name]['detection_classes'] += det_cls
 
     for k in dets.keys():
-        dets[k]['detection_boxes'] = np.array(dets[k]['detection_boxes'], dtype=np.float32)
-        dets[k]['detection_scores'] = np.array(dets[k]['detection_scores'], dtype=np.float32)
-        dets[k]['detection_classes'] = np.array(dets[k]['detection_classes'], dtype=np.int32)
+        dets[k]['detection_boxes'] = np.array(dets[k]['detection_boxes'],
+                                              dtype=np.float32)
+        dets[k]['detection_scores'] = np.array(dets[k]['detection_scores'],
+                                               dtype=np.float32)
+        dets[k]['detection_classes'] = np.array(dets[k]['detection_classes'],
+                                                dtype=np.int32)
 
     ed = time.time()
     print('\tDets read, using: {:.2f} s'.format(ed - st))
     return dets
+
 
 ############################################
 
@@ -207,20 +224,18 @@ class OpenImagesDetectionChallengeEvaluator(object):
           ValueError: On adding groundtruth for an image more than once.
         """
         if image_id in self._image_ids:
-           raise ValueError(
-               'Image with id {} already added.'.format(image_id))
-        groundtruth_classes = (
-            groundtruth_dict["groundtruth_classes"] -
-            self._label_id_offset)
+            raise ValueError(
+                'Image with id {} already added.'.format(image_id))
+        groundtruth_classes = (groundtruth_dict['groundtruth_classes'] -
+                               self._label_id_offset)
         # If the key is not present in the groundtruth_dict or the array is empty
         # (unless there are no annotations for the groundtruth on this image)
         # use values from the dictionary or insert None otherwise.
         #groundtruth_group_of = groundtruth_dict["groundtruth_group_of"]
-        if ("groundtruth_group_of" in
-            groundtruth_dict.keys() and
-            (groundtruth_dict["groundtruth_group_of"].size
-            or not groundtruth_classes.size)):
-            groundtruth_group_of = groundtruth_dict["groundtruth_group_of"]
+        if ('groundtruth_group_of' in groundtruth_dict.keys()
+                and (groundtruth_dict['groundtruth_group_of'].size
+                     or not groundtruth_classes.size)):
+            groundtruth_group_of = groundtruth_dict['groundtruth_group_of']
         else:
             groundtruth_group_of = None
             if not len(self._image_ids) % 1000:
@@ -230,25 +245,23 @@ class OpenImagesDetectionChallengeEvaluator(object):
 
         self._evaluation.add_single_ground_truth_image_info(
             image_id,
-            groundtruth_dict["groundtruth_boxes"],
+            groundtruth_dict['groundtruth_boxes'],
             groundtruth_classes,
             groundtruth_is_difficult_list=None,
             groundtruth_is_group_of_list=groundtruth_group_of)
 
         self._image_ids.update([image_id])
 
-        groundtruth_classes = (
-            groundtruth_dict["groundtruth_classes"] -
-            self._label_id_offset)
+        groundtruth_classes = (groundtruth_dict['groundtruth_classes'] -
+                               self._label_id_offset)
         # self._evaluatable_labels[image_id] = np.unique(
         #     np.concatenate(((groundtruth_dict.get(
         #         "verified_labels",
         #         np.array([], dtype=int)) - self._label_id_offset),
         #         groundtruth_classes)))
         self._evaluatable_labels[image_id] = np.unique(
-            np.concatenate(((
-                np.array([1], dtype=int) - self._label_id_offset),
-                groundtruth_classes)))
+            np.concatenate(((np.array([1], dtype=int) - self._label_id_offset),
+                            groundtruth_classes)))
 
     def add_single_detected_image_info(self, image_id, detections_dict):
         """Adds detections for a single image to be used for evaluation.
@@ -275,13 +288,13 @@ class OpenImagesDetectionChallengeEvaluator(object):
             self._image_ids.update([image_id])
             self._evaluatable_labels[image_id] = np.array([])
 
-        detection_classes = (
-            detections_dict["detection_classes"] - self._label_id_offset)
+        detection_classes = (detections_dict['detection_classes'] -
+                             self._label_id_offset)
         allowed_classes = np.where(
             np.isin(detection_classes, self._evaluatable_labels[image_id]))
         detection_classes = detection_classes[allowed_classes]
-        detected_boxes = detections_dict["detection_boxes"][allowed_classes]
-        detected_scores = detections_dict["detection_scores"][allowed_classes]
+        detected_boxes = detections_dict['detection_boxes'][allowed_classes]
+        detected_scores = detections_dict['detection_scores'][allowed_classes]
 
         self._evaluation.add_single_detected_image_info(
             image_key=image_id,
@@ -304,15 +317,15 @@ class OpenImagesDetectionChallengeEvaluator(object):
         """
         # (per_class_ap, mean_ap, _, _, per_class_corloc, mean_corloc) = (
         #     self._evaluation.evaluate())
-        (per_class_ap, mean_ap, precision, recall) = (
-            self._evaluation.evaluate())
+        (per_class_ap, mean_ap, precision,
+         recall) = (self._evaluation.evaluate())
         pascal_metrics = {
-            self._metric_prefix +
-            'Precision/mAP@{}IOU'.format(self._matching_iou_threshold):
-                mean_ap
+            self._metric_prefix + 'Precision/mAP@{}IOU'.format(self._matching_iou_threshold):
+            mean_ap
         }
         mean_recall = np.nanmean([np.nanmean(x) for x in recall])
-        name = self._metric_prefix + 'Mean Recall@{}IOU'.format(self._matching_iou_threshold)
+        name = self._metric_prefix + 'Mean Recall@{}IOU'.format(
+            self._matching_iou_threshold)
         pascal_metrics[name] = mean_recall
 
         # if self._evaluate_corlocs:
@@ -327,7 +340,7 @@ class OpenImagesDetectionChallengeEvaluator(object):
                         self._matching_iou_threshold,
                         category_index[idx + self._label_id_offset]['id'],
                         category_index[idx + self._label_id_offset]['name'],
-                        ))
+                    ))
                 pascal_metrics[display_name] = per_class_ap[idx]
 
                 # Optionally add CorLoc metrics.classes
@@ -357,14 +370,12 @@ class OpenImagesDetectionChallengeEvaluator(object):
 #     ])
 
 ObjectDetectionEvalMetrics = collections.namedtuple(
-    'ObjectDetectionEvalMetrics', [
-        'average_precisions', 'mean_ap', 'precisions', 'recalls'
-    ])
+    'ObjectDetectionEvalMetrics',
+    ['average_precisions', 'mean_ap', 'precisions', 'recalls'])
 
 
 class ObjectDetectionEvaluation(object):
     """Internal implementation of Pascal object detection metrics."""
-
     def __init__(self,
                  num_groundtruth_classes,
                  matching_iou_threshold=0.5,
@@ -394,7 +405,8 @@ class ObjectDetectionEvaluation(object):
         self.groundtruth_is_difficult_list = {}
         self.groundtruth_is_group_of_list = {}
         #self.num_gt_instances_per_class = np.zeros(self.num_class, dtype=float)
-        self.num_gt_instances_per_class = np.zeros(self.num_class, dtype=np.int32)
+        self.num_gt_instances_per_class = np.zeros(self.num_class,
+                                                   dtype=np.int32)
         self.num_gt_imgs_per_class = np.zeros(self.num_class, dtype=np.int32)
 
         self._initialize_detections()
@@ -404,8 +416,8 @@ class ObjectDetectionEvaluation(object):
         self.scores_per_class = [[] for _ in range(self.num_class)]
         self.tp_fp_labels_per_class = [[] for _ in range(self.num_class)]
         self.num_images_correctly_detected_per_class = np.zeros(self.num_class)
-        self.average_precision_per_class = np.empty(
-            self.num_class, dtype=float)
+        self.average_precision_per_class = np.empty(self.num_class,
+                                                    dtype=float)
         self.average_precision_per_class.fill(np.nan)
         self.precisions_per_class = []
         self.recalls_per_class = []
@@ -465,8 +477,11 @@ class ObjectDetectionEvaluation(object):
             groundtruth_is_difficult_list.astype(dtype=bool),
             groundtruth_is_group_of_list.astype(dtype=bool))
 
-    def add_single_detected_image_info(self, image_key, detected_boxes,
-                                       detected_scores, detected_class_labels,
+    def add_single_detected_image_info(self,
+                                       image_key,
+                                       detected_boxes,
+                                       detected_scores,
+                                       detected_class_labels,
                                        detected_masks=None):
         """Adds detections for a single image to be used for evaluation.
 
@@ -487,12 +502,13 @@ class ObjectDetectionEvaluation(object):
           ValueError: if the number of boxes, scores and class labels differ in
             length.
         """
-        if (len(detected_boxes) != len(detected_scores) or
-                len(detected_boxes) != len(detected_class_labels)):
-            raise ValueError('detected_boxes, detected_scores and '
-                             'detected_class_labels should all have same lengths. Got'
-                             '[%d, %d, %d]' % len(detected_boxes),
-                             len(detected_scores), len(detected_class_labels))
+        if (len(detected_boxes) != len(detected_scores)
+                or len(detected_boxes) != len(detected_class_labels)):
+            raise ValueError(
+                'detected_boxes, detected_scores and '
+                'detected_class_labels should all have same lengths. Got'
+                '[%d, %d, %d]' % len(detected_boxes), len(detected_scores),
+                len(detected_class_labels))
 
         if image_key in self.detection_keys:
             logging.warn(
@@ -506,14 +522,14 @@ class ObjectDetectionEvaluation(object):
             groundtruth_class_labels = self.groundtruth_class_labels[image_key]
             # Masks are popped instead of look up. The reason is that we do not want
             # to keep all masks in memory which can cause memory overflow.
-            groundtruth_masks = self.groundtruth_masks.pop(
-                image_key)
+            groundtruth_masks = self.groundtruth_masks.pop(image_key)
             groundtruth_is_difficult_list = self.groundtruth_is_difficult_list[
                 image_key]
             groundtruth_is_group_of_list = self.groundtruth_is_group_of_list[
                 image_key]
         else:
-            import pdb ; pdb.set_trace() # BREAKPOINT
+            import pdb
+            pdb.set_trace()  # BREAKPOINT
             groundtruth_boxes = np.empty(shape=[0, 4], dtype=float)
             groundtruth_class_labels = np.array([], dtype=int)
             if detected_masks is None:
@@ -610,7 +626,8 @@ class ObjectDetectionEvaluation(object):
                 all_scores = np.append(all_scores, scores)
                 all_tp_fp_labels = np.append(all_tp_fp_labels, tp_fp_labels)
             precision, recall = metrics.compute_precision_recall(
-                scores, tp_fp_labels, self.num_gt_instances_per_class[class_index])
+                scores, tp_fp_labels,
+                self.num_gt_instances_per_class[class_index])
             self.precisions_per_class.append(precision)
             self.recalls_per_class.append(recall)
             average_precision = metrics.compute_average_precision(
@@ -632,9 +649,9 @@ class ObjectDetectionEvaluation(object):
         # return ObjectDetectionEvalMetrics(
         #     self.average_precision_per_class, mean_ap, self.precisions_per_class,
         #     self.recalls_per_class, self.corloc_per_class, mean_corloc)
-        return ObjectDetectionEvalMetrics(
-            self.average_precision_per_class, mean_ap,
-            self.precisions_per_class, self.recalls_per_class)
+        return ObjectDetectionEvalMetrics(self.average_precision_per_class,
+                                          mean_ap, self.precisions_per_class,
+                                          self.recalls_per_class)
 
 
 def create_category_index(categories):

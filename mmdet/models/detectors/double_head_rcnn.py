@@ -1,13 +1,13 @@
 import torch
 
 from mmdet.core import bbox2roi, build_assigner, build_sampler
+
 from ..registry import DETECTORS
 from .two_stage import TwoStageDetector
 
 
 @DETECTORS.register_module
 class DoubleHeadRCNN(TwoStageDetector):
-
     def __init__(self, reg_roi_scale_factor, **kwargs):
         super().__init__(**kwargs)
         self.reg_roi_scale_factor = reg_roi_scale_factor
@@ -53,8 +53,8 @@ class DoubleHeadRCNN(TwoStageDetector):
             rpn_outs = self.rpn_head(x)
             rpn_loss_inputs = rpn_outs + (gt_bboxes, img_metas,
                                           self.train_cfg.rpn)
-            rpn_losses = self.rpn_head.loss(
-                *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
+            rpn_losses = self.rpn_head.loss(*rpn_loss_inputs,
+                                            gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rpn_losses)
 
             proposal_cfg = self.train_cfg.get('rpn_proposal',
@@ -67,8 +67,8 @@ class DoubleHeadRCNN(TwoStageDetector):
         # assign gts and sample proposals
         if self.with_bbox or self.with_mask:
             bbox_assigner = build_assigner(self.train_cfg.rcnn.assigner)
-            bbox_sampler = build_sampler(
-                self.train_cfg.rcnn.sampler, context=self)
+            bbox_sampler = build_sampler(self.train_cfg.rcnn.sampler,
+                                         context=self)
             num_imgs = img.size(0)
             if gt_bboxes_ignore is None:
                 gt_bboxes_ignore = [None for _ in range(num_imgs)]
@@ -123,15 +123,13 @@ class DoubleHeadRCNN(TwoStageDetector):
                 device = bbox_cls_feats.device
                 for res in sampling_results:
                     pos_inds.append(
-                        torch.ones(
-                            res.pos_bboxes.shape[0],
-                            device=device,
-                            dtype=torch.uint8))
+                        torch.ones(res.pos_bboxes.shape[0],
+                                   device=device,
+                                   dtype=torch.uint8))
                     pos_inds.append(
-                        torch.zeros(
-                            res.neg_bboxes.shape[0],
-                            device=device,
-                            dtype=torch.uint8))
+                        torch.zeros(res.neg_bboxes.shape[0],
+                                    device=device,
+                                    dtype=torch.uint8))
                 pos_inds = torch.cat(pos_inds)
                 mask_feats = bbox_cls_feats[pos_inds]
             mask_pred = self.mask_head(mask_feats)

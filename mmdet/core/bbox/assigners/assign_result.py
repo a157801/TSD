@@ -39,7 +39,6 @@ class AssignResult(util_mixins.NiceRepr):
         <AssignResult(num_gts=9, gt_inds.shape=(7,), max_overlaps.shape=(7,),
                       labels.shape=(7,))>
     """
-
     def __init__(self, num_gts, gt_inds, max_overlaps, labels=None):
         self.num_gts = num_gts
         self.gt_inds = gt_inds
@@ -75,8 +74,8 @@ class AssignResult(util_mixins.NiceRepr):
         if self.gt_inds is None:
             parts.append('gt_inds={!r}'.format(self.gt_inds))
         else:
-            parts.append('gt_inds.shape={!r}'.format(
-                tuple(self.gt_inds.shape)))
+            parts.append('gt_inds.shape={!r}'.format(tuple(
+                self.gt_inds.shape)))
         if self.max_overlaps is None:
             parts.append('max_overlaps={!r}'.format(self.max_overlaps))
         else:
@@ -181,8 +180,10 @@ class AssignResult(util_mixins.NiceRepr):
         return self
 
     def add_gt_(self, gt_labels):
-        self_inds = torch.arange(
-            1, len(gt_labels) + 1, dtype=torch.long, device=gt_labels.device)
+        self_inds = torch.arange(1,
+                                 len(gt_labels) + 1,
+                                 dtype=torch.long,
+                                 device=gt_labels.device)
         self.gt_inds = torch.cat([self_inds, self.gt_inds])
 
         self.max_overlaps = torch.cat(

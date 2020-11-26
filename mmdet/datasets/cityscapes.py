@@ -11,6 +11,7 @@ import numpy as np
 import pycocotools.mask as maskUtils
 
 from mmdet.utils import print_log
+
 from .coco import CocoDataset
 from .registry import DATASETS
 
@@ -80,12 +81,11 @@ class CityscapesDataset(CocoDataset):
         else:
             gt_bboxes_ignore = np.zeros((0, 4), dtype=np.float32)
 
-        ann = dict(
-            bboxes=gt_bboxes,
-            labels=gt_labels,
-            bboxes_ignore=gt_bboxes_ignore,
-            masks=gt_masks_ann,
-            seg_map=img_info['segm_file'])
+        ann = dict(bboxes=gt_bboxes,
+                   labels=gt_labels,
+                   bboxes_ignore=gt_bboxes_ignore,
+                   masks=gt_masks_ann,
+                   seg_map=img_info['segm_file'])
 
         return ann
 
@@ -140,8 +140,8 @@ class CityscapesDataset(CocoDataset):
                         outfile_prefix,
                         basename + '_{}_{}.png'.format(i, classes))
                     mmcv.imwrite(mask, png_filename)
-                    fout.write('{} {} {}\n'.format(
-                        osp.basename(png_filename), class_id, score))
+                    fout.write('{} {} {}\n'.format(osp.basename(png_filename),
+                                                   class_id, score))
             result_files.append(pred_txt)
 
         return result_files
@@ -247,9 +247,8 @@ class CityscapesDataset(CocoDataset):
             result_dir = osp.join(tmp_dir.name, 'results')
 
         eval_results = {}
-        print_log(
-            'Evaluating results under {} ...'.format(result_dir),
-            logger=logger)
+        print_log('Evaluating results under {} ...'.format(result_dir),
+                  logger=logger)
 
         # set global states in cityscapes evaluation API
         CSEval.args.cityscapesPath = os.path.join(self.img_prefix, '../..')

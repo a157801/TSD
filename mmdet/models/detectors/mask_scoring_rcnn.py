@@ -1,6 +1,7 @@
 import torch
 
 from mmdet.core import bbox2roi, build_assigner, build_sampler
+
 from .. import builder
 from ..registry import DETECTORS
 from .two_stage import TwoStageDetector
@@ -12,7 +13,6 @@ class MaskScoringRCNN(TwoStageDetector):
 
     https://arxiv.org/abs/1903.00241
     """
-
     def __init__(self,
                  backbone,
                  rpn_head,
@@ -26,18 +26,18 @@ class MaskScoringRCNN(TwoStageDetector):
                  shared_head=None,
                  mask_iou_head=None,
                  pretrained=None):
-        super(MaskScoringRCNN, self).__init__(
-            backbone=backbone,
-            neck=neck,
-            shared_head=shared_head,
-            rpn_head=rpn_head,
-            bbox_roi_extractor=bbox_roi_extractor,
-            bbox_head=bbox_head,
-            mask_roi_extractor=mask_roi_extractor,
-            mask_head=mask_head,
-            train_cfg=train_cfg,
-            test_cfg=test_cfg,
-            pretrained=pretrained)
+        super(MaskScoringRCNN,
+              self).__init__(backbone=backbone,
+                             neck=neck,
+                             shared_head=shared_head,
+                             rpn_head=rpn_head,
+                             bbox_roi_extractor=bbox_roi_extractor,
+                             bbox_head=bbox_head,
+                             mask_roi_extractor=mask_roi_extractor,
+                             mask_head=mask_head,
+                             train_cfg=train_cfg,
+                             test_cfg=test_cfg,
+                             pretrained=pretrained)
 
         self.mask_iou_head = builder.build_head(mask_iou_head)
         self.mask_iou_head.init_weights()
@@ -63,8 +63,8 @@ class MaskScoringRCNN(TwoStageDetector):
             rpn_outs = self.rpn_head(x)
             rpn_loss_inputs = rpn_outs + (gt_bboxes, img_metas,
                                           self.train_cfg.rpn)
-            rpn_losses = self.rpn_head.loss(
-                *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
+            rpn_losses = self.rpn_head.loss(*rpn_loss_inputs,
+                                            gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rpn_losses)
 
             proposal_cfg = self.train_cfg.get('rpn_proposal',
@@ -77,8 +77,8 @@ class MaskScoringRCNN(TwoStageDetector):
         # assign gts and sample proposals
         if self.with_bbox or self.with_mask:
             bbox_assigner = build_assigner(self.train_cfg.rcnn.assigner)
-            bbox_sampler = build_sampler(
-                self.train_cfg.rcnn.sampler, context=self)
+            bbox_sampler = build_sampler(self.train_cfg.rcnn.sampler,
+                                         context=self)
             num_imgs = img.size(0)
             if gt_bboxes_ignore is None:
                 gt_bboxes_ignore = [None for _ in range(num_imgs)]
@@ -127,15 +127,13 @@ class MaskScoringRCNN(TwoStageDetector):
                 device = bbox_feats.device
                 for res in sampling_results:
                     pos_inds.append(
-                        torch.ones(
-                            res.pos_bboxes.shape[0],
-                            device=device,
-                            dtype=torch.uint8))
+                        torch.ones(res.pos_bboxes.shape[0],
+                                   device=device,
+                                   dtype=torch.uint8))
                     pos_inds.append(
-                        torch.zeros(
-                            res.neg_bboxes.shape[0],
-                            device=device,
-                            dtype=torch.uint8))
+                        torch.zeros(res.neg_bboxes.shape[0],
+                                    device=device,
+                                    dtype=torch.uint8))
                 pos_inds = torch.cat(pos_inds)
                 mask_feats = bbox_feats[pos_inds]
             mask_pred = self.mask_head(mask_feats)
@@ -178,8 +176,8 @@ class MaskScoringRCNN(TwoStageDetector):
         else:
             # if det_bboxes is rescaled to the original image size, we need to
             # rescale it back to the testing scale to obtain RoIs.
-            _bboxes = (
-                det_bboxes[:, :4] * scale_factor if rescale else det_bboxes)
+            _bboxes = (det_bboxes[:, :4] *
+                       scale_factor if rescale else det_bboxes)
             mask_rois = bbox2roi([_bboxes])
             mask_feats = self.mask_roi_extractor(
                 x[:len(self.mask_roi_extractor.featmap_strides)], mask_rois)

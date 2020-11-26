@@ -8,11 +8,11 @@ from torch.autograd.function import once_differentiable
 from torch.nn.modules.utils import _pair, _single
 
 from mmdet.utils import print_log
+
 from . import deform_conv_cuda
 
 
 class DeformConvFunction(Function):
-
     @staticmethod
     def forward(ctx,
                 input,
@@ -113,7 +113,6 @@ class DeformConvFunction(Function):
 
 
 class ModulatedDeformConvFunction(Function):
-
     @staticmethod
     def forward(ctx,
                 input,
@@ -190,7 +189,6 @@ modulated_deform_conv = ModulatedDeformConvFunction.apply
 
 
 class DeformConv(nn.Module):
-
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -239,8 +237,8 @@ class DeformConv(nn.Module):
     def forward(self, x, offset):
         # To fix an assert error in deform_conv_cuda.cpp:128
         # input image is smaller than kernel
-        input_pad = (
-            x.size(2) < self.kernel_size[0] or x.size(3) < self.kernel_size[1])
+        input_pad = (x.size(2) < self.kernel_size[0]
+                     or x.size(3) < self.kernel_size[1])
         if input_pad:
             pad_h = max(self.kernel_size[0] - x.size(2), 0)
             pad_w = max(self.kernel_size[1] - x.size(3), 0)
@@ -276,14 +274,13 @@ class DeformConvPack(DeformConv):
     def __init__(self, *args, **kwargs):
         super(DeformConvPack, self).__init__(*args, **kwargs)
 
-        self.conv_offset = nn.Conv2d(
-            self.in_channels,
-            self.deformable_groups * 2 * self.kernel_size[0] *
-            self.kernel_size[1],
-            kernel_size=self.kernel_size,
-            stride=_pair(self.stride),
-            padding=_pair(self.padding),
-            bias=True)
+        self.conv_offset = nn.Conv2d(self.in_channels,
+                                     self.deformable_groups * 2 *
+                                     self.kernel_size[0] * self.kernel_size[1],
+                                     kernel_size=self.kernel_size,
+                                     stride=_pair(self.stride),
+                                     padding=_pair(self.padding),
+                                     bias=True)
         self.init_offset()
 
     def init_offset(self):
@@ -313,10 +310,9 @@ class DeformConvPack(DeformConv):
                                                                 '_offset.bias')
 
         if version is not None and version > 1:
-            print_log(
-                'DeformConvPack {} is upgraded to version 2.'.format(
-                    prefix.rstrip('.')),
-                logger='root')
+            print_log('DeformConvPack {} is upgraded to version 2.'.format(
+                prefix.rstrip('.')),
+                      logger='root')
 
         super()._load_from_state_dict(state_dict, prefix, local_metadata,
                                       strict, missing_keys, unexpected_keys,
@@ -324,7 +320,6 @@ class DeformConvPack(DeformConv):
 
 
 class ModulatedDeformConv(nn.Module):
-
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -394,14 +389,13 @@ class ModulatedDeformConvPack(ModulatedDeformConv):
     def __init__(self, *args, **kwargs):
         super(ModulatedDeformConvPack, self).__init__(*args, **kwargs)
 
-        self.conv_offset = nn.Conv2d(
-            self.in_channels,
-            self.deformable_groups * 3 * self.kernel_size[0] *
-            self.kernel_size[1],
-            kernel_size=self.kernel_size,
-            stride=_pair(self.stride),
-            padding=_pair(self.padding),
-            bias=True)
+        self.conv_offset = nn.Conv2d(self.in_channels,
+                                     self.deformable_groups * 3 *
+                                     self.kernel_size[0] * self.kernel_size[1],
+                                     kernel_size=self.kernel_size,
+                                     stride=_pair(self.stride),
+                                     padding=_pair(self.padding),
+                                     bias=True)
         self.init_offset()
 
     def init_offset(self):

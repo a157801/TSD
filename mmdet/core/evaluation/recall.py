@@ -4,6 +4,7 @@ import numpy as np
 from terminaltables import AsciiTable
 
 from mmdet.utils import print_log
+
 from .bbox_overlaps import bbox_overlaps
 
 

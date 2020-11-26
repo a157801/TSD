@@ -6,6 +6,7 @@ import torch.nn as nn
 from mmdet.core import (bbox2result, bbox2roi, bbox_mapping, build_assigner,
                         build_sampler, merge_aug_bboxes, merge_aug_masks,
                         multiclass_nms)
+
 from .. import builder
 from ..registry import DETECTORS
 from .base import BaseDetector
@@ -14,7 +15,6 @@ from .test_mixins import RPNTestMixin
 
 @DETECTORS.register_module
 class CascadeRCNN(BaseDetector, RPNTestMixin):
-
     def __init__(self,
                  num_stages,
                  backbone,
@@ -195,8 +195,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
             rpn_outs = self.rpn_head(x)
             rpn_loss_inputs = rpn_outs + (gt_bboxes, img_metas,
                                           self.train_cfg.rpn)
-            rpn_losses = self.rpn_head.loss(
-                *rpn_loss_inputs, gt_bboxes_ignore=gt_bboxes_ignore)
+            rpn_losses = self.rpn_head.loss(*rpn_loss_inputs,
+                                            gt_bboxes_ignore=gt_bboxes_ignore)
             losses.update(rpn_losses)
 
             proposal_cfg = self.train_cfg.get('rpn_proposal',
@@ -215,8 +215,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
             sampling_results = []
             if self.with_bbox or self.with_mask:
                 bbox_assigner = build_assigner(rcnn_train_cfg.assigner)
-                bbox_sampler = build_sampler(
-                    rcnn_train_cfg.sampler, context=self)
+                bbox_sampler = build_sampler(rcnn_train_cfg.sampler,
+                                             context=self)
                 num_imgs = img.size(0)
                 if gt_bboxes_ignore is None:
                     gt_bboxes_ignore = [None for _ in range(num_imgs)]
@@ -250,24 +250,27 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 bbox_feats = self.shared_head(bbox_feats)
 
             if self.use_TSD[i]:
-                cls_score, bbox_pred, TSD_cls_score, TSD_bbox_pred, delta_c, delta_r = bbox_head(bbox_feats, x[:bbox_roi_extractor.num_inputs], rois)
+                cls_score, bbox_pred, TSD_cls_score, TSD_bbox_pred, delta_c, delta_r = bbox_head(
+                    bbox_feats, x[:bbox_roi_extractor.num_inputs], rois)
 
-                bbox_targets = bbox_head.get_target(rois, sampling_results,
-                                                         gt_bboxes, gt_labels, delta_c, delta_r, cls_score, bbox_pred, TSD_cls_score, TSD_bbox_pred,
-                                                         rcnn_train_cfg, img_metas)
+                bbox_targets = bbox_head.get_target(
+                    rois, sampling_results, gt_bboxes, gt_labels, delta_c,
+                    delta_r, cls_score, bbox_pred, TSD_cls_score,
+                    TSD_bbox_pred, rcnn_train_cfg, img_metas)
 
-                loss_bbox = bbox_head.loss(cls_score, bbox_pred, TSD_cls_score, TSD_bbox_pred,
-                                                *bbox_targets)
+                loss_bbox = bbox_head.loss(cls_score, bbox_pred, TSD_cls_score,
+                                           TSD_bbox_pred, *bbox_targets)
             else:
                 cls_score, bbox_pred = bbox_head(bbox_feats)
 
-                bbox_targets = bbox_head.get_target(sampling_results, gt_bboxes,
-                                                    gt_labels, rcnn_train_cfg)
+                bbox_targets = bbox_head.get_target(sampling_results,
+                                                    gt_bboxes, gt_labels,
+                                                    rcnn_train_cfg)
                 loss_bbox = bbox_head.loss(cls_score, bbox_pred, *bbox_targets)
 
             for name, value in loss_bbox.items():
-                losses['s{}.{}'.format(i, name)] = (
-                    value * lw if 'loss' in name else value)
+                losses['s{}.{}'.format(
+                    i, name)] = (value * lw if 'loss' in name else value)
 
             # mask head forward and loss
             if self.with_mask:
@@ -285,15 +288,13 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                     device = bbox_feats.device
                     for res in sampling_results:
                         pos_inds.append(
-                            torch.ones(
-                                res.pos_bboxes.shape[0],
-                                device=device,
-                                dtype=torch.uint8))
+                            torch.ones(res.pos_bboxes.shape[0],
+                                       device=device,
+                                       dtype=torch.uint8))
                         pos_inds.append(
-                            torch.zeros(
-                                res.neg_bboxes.shape[0],
-                                device=device,
-                                dtype=torch.uint8))
+                            torch.zeros(res.neg_bboxes.shape[0],
+                                        device=device,
+                                        dtype=torch.uint8))
                     pos_inds = torch.cat(pos_inds)
                     mask_feats = bbox_feats[pos_inds.type(torch.bool)]
                 mask_head = self.mask_head[i]
@@ -304,8 +305,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                     [res.pos_gt_labels for res in sampling_results])
                 loss_mask = mask_head.loss(mask_pred, mask_targets, pos_labels)
                 for name, value in loss_mask.items():
-                    losses['s{}.{}'.format(i, name)] = (
-                        value * lw if 'loss' in name else value)
+                    losses['s{}.{}'.format(
+                        i, name)] = (value * lw if 'loss' in name else value)
 
             # refine bboxes
             if i < self.num_stages - 1:
@@ -313,24 +314,25 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 roi_labels = bbox_targets[0]  # bbox_targets is a tuple
                 if self.use_TSD[i]:
                     if self.training:
-                    #     with torch.no_grad():
-                    #         proposal_list = bbox_head.refine_bboxes(
-                    #             rois, roi_labels, bbox_pred, pos_is_gts, img_metas)
-                    # else:
-                        w = rois[:,3]-rois[:,1]+1
-                        h = rois[:,4]-rois[:,2]+1
+                        #     with torch.no_grad():
+                        #         proposal_list = bbox_head.refine_bboxes(
+                        #             rois, roi_labels, bbox_pred, pos_is_gts, img_metas)
+                        # else:
+                        w = rois[:, 3] - rois[:, 1] + 1
+                        h = rois[:, 4] - rois[:, 2] + 1
                         scale = 0.1
-                        rois_r = rois.new_zeros(rois.shape[0],rois.shape[1])
-                        rois_r[:,0] = rois[:,0]
+                        rois_r = rois.new_zeros(rois.shape[0], rois.shape[1])
+                        rois_r[:, 0] = rois[:, 0]
                         delta_r = delta_r.to(dtype=rois_r.dtype)
-                        rois_r[:,1] = rois[:,1]+delta_r[:,0]*scale*w
-                        rois_r[:,2] = rois[:,2]+delta_r[:,1]*scale*h
-                        rois_r[:,3] = rois[:,3]+delta_r[:,0]*scale*w
-                        rois_r[:,4] = rois[:,4]+delta_r[:,1]*scale*h
+                        rois_r[:, 1] = rois[:, 1] + delta_r[:, 0] * scale * w
+                        rois_r[:, 2] = rois[:, 2] + delta_r[:, 1] * scale * h
+                        rois_r[:, 3] = rois[:, 3] + delta_r[:, 0] * scale * w
+                        rois_r[:, 4] = rois[:, 4] + delta_r[:, 1] * scale * h
 
                         with torch.no_grad():
                             proposal_list = bbox_head.refine_bboxes(
-                                rois_r, roi_labels, TSD_bbox_pred, pos_is_gts, img_metas)
+                                rois_r, roi_labels, TSD_bbox_pred, pos_is_gts,
+                                img_metas)
                 else:
                     with torch.no_grad():
                         proposal_list = bbox_head.refine_bboxes(
@@ -379,7 +381,9 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 bbox_feats = self.shared_head(bbox_feats)
 
             if self.use_TSD[i]:
-                _, _, cls_score, bbox_pred, delta_c, delta_r = bbox_head(bbox_feats, x[:len(bbox_roi_extractor.featmap_strides)], rois)
+                _, _, cls_score, bbox_pred, delta_c, delta_r = bbox_head(
+                    bbox_feats, x[:len(bbox_roi_extractor.featmap_strides)],
+                    rois)
             else:
                 cls_score, bbox_pred = bbox_head(bbox_feats)
 
@@ -388,34 +392,34 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
             if i < self.num_stages - 1:
                 bbox_label = cls_score.argmax(dim=1)
                 if self.use_TSD[i]:
-                    w = rois[:,3]-rois[:,1]+1
-                    h = rois[:,4]-rois[:,2]+1
+                    w = rois[:, 3] - rois[:, 1] + 1
+                    h = rois[:, 4] - rois[:, 2] + 1
                     scale = 0.1
-                    rois_r = rois.new_zeros(rois.shape[0],rois.shape[1])
-                    rois_r[:,0] = rois[:,0]
+                    rois_r = rois.new_zeros(rois.shape[0], rois.shape[1])
+                    rois_r[:, 0] = rois[:, 0]
                     delta_r = delta_r.to(dtype=rois_r.dtype)
-                    rois_r[:,1] = rois[:,1]+delta_r[:,0]*scale*w
-                    rois_r[:,2] = rois[:,2]+delta_r[:,1]*scale*h
-                    rois_r[:,3] = rois[:,3]+delta_r[:,0]*scale*w
-                    rois_r[:,4] = rois[:,4]+delta_r[:,1]*scale*h
-                    rois = bbox_head.regress_by_class(rois_r, bbox_label, bbox_pred,
-                                                      img_metas[0])
+                    rois_r[:, 1] = rois[:, 1] + delta_r[:, 0] * scale * w
+                    rois_r[:, 2] = rois[:, 2] + delta_r[:, 1] * scale * h
+                    rois_r[:, 3] = rois[:, 3] + delta_r[:, 0] * scale * w
+                    rois_r[:, 4] = rois[:, 4] + delta_r[:, 1] * scale * h
+                    rois = bbox_head.regress_by_class(rois_r, bbox_label,
+                                                      bbox_pred, img_metas[0])
                 else:
-                    rois = bbox_head.regress_by_class(rois, bbox_label, bbox_pred,
-                                                      img_metas[0])
+                    rois = bbox_head.regress_by_class(rois, bbox_label,
+                                                      bbox_pred, img_metas[0])
 
         cls_score = sum(ms_scores) / self.num_stages
         if self.use_TSD[-1]:
-            w = rois[:,3]-rois[:,1]+1
-            h = rois[:,4]-rois[:,2]+1
+            w = rois[:, 3] - rois[:, 1] + 1
+            h = rois[:, 4] - rois[:, 2] + 1
             scale = 0.1
-            rois_r = rois.new_zeros(rois.shape[0],rois.shape[1])
-            rois_r[:,0] = rois[:,0]
+            rois_r = rois.new_zeros(rois.shape[0], rois.shape[1])
+            rois_r[:, 0] = rois[:, 0]
             delta_r = delta_r.to(dtype=rois_r.dtype)
-            rois_r[:,1] = rois[:,1]+delta_r[:,0]*scale*w
-            rois_r[:,2] = rois[:,2]+delta_r[:,1]*scale*h
-            rois_r[:,3] = rois[:,3]+delta_r[:,0]*scale*w
-            rois_r[:,4] = rois[:,4]+delta_r[:,1]*scale*h
+            rois_r[:, 1] = rois[:, 1] + delta_r[:, 0] * scale * w
+            rois_r[:, 2] = rois[:, 2] + delta_r[:, 1] * scale * h
+            rois_r[:, 3] = rois[:, 3] + delta_r[:, 0] * scale * w
+            rois_r[:, 4] = rois[:, 4] + delta_r[:, 1] * scale * h
             det_bboxes, det_labels = self.bbox_head[-1].get_det_bboxes(
                 rois_r,
                 cls_score,
@@ -444,9 +448,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 segm_result = [[] for _ in range(mask_classes)]
             else:
                 if isinstance(scale_factor, float):  # aspect ratio fixed
-                    _bboxes = (
-                        det_bboxes[:, :4] *
-                        scale_factor if rescale else det_bboxes)
+                    _bboxes = (det_bboxes[:, :4] *
+                               scale_factor if rescale else det_bboxes)
                 else:
                     _bboxes = (
                         det_bboxes[:, :4] *
@@ -485,8 +488,8 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
         of imgs[0].
         """
         # recompute feats to save memory
-        proposal_list = self.aug_test_rpn(
-            self.extract_feats(imgs), img_metas, self.test_cfg.rpn)
+        proposal_list = self.aug_test_rpn(self.extract_feats(imgs), img_metas,
+                                          self.test_cfg.rpn)
 
         rcnn_test_cfg = self.test_cfg.rcnn
         aug_bboxes = []
@@ -513,7 +516,9 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                     bbox_feats = self.shared_head(bbox_feats)
 
                 if self.use_TSD[i]:
-                    _, _, cls_score, bbox_pred, delta_c, delta_r = bbox_head(bbox_feats, x[:len(bbox_roi_extractor.featmap_strides)], rois)
+                    _, _, cls_score, bbox_pred, delta_c, delta_r = bbox_head(
+                        bbox_feats,
+                        x[:len(bbox_roi_extractor.featmap_strides)], rois)
                 else:
                     cls_score, bbox_pred = bbox_head(bbox_feats)
 
@@ -522,35 +527,35 @@ class CascadeRCNN(BaseDetector, RPNTestMixin):
                 if i < self.num_stages - 1:
                     bbox_label = cls_score.argmax(dim=1)
                     if self.use_TSD[i]:
-                        w = rois[:,3]-rois[:,1]+1
-                        h = rois[:,4]-rois[:,2]+1
+                        w = rois[:, 3] - rois[:, 1] + 1
+                        h = rois[:, 4] - rois[:, 2] + 1
                         scale = 0.1
-                        rois_r = rois.new_zeros(rois.shape[0],rois.shape[1])
-                        rois_r[:,0] = rois[:,0]
+                        rois_r = rois.new_zeros(rois.shape[0], rois.shape[1])
+                        rois_r[:, 0] = rois[:, 0]
                         delta_r = delta_r.to(dtype=rois_r.dtype)
-                        rois_r[:,1] = rois[:,1]+delta_r[:,0]*scale*w
-                        rois_r[:,2] = rois[:,2]+delta_r[:,1]*scale*h
-                        rois_r[:,3] = rois[:,3]+delta_r[:,0]*scale*w
-                        rois_r[:,4] = rois[:,4]+delta_r[:,1]*scale*h
-                        rois = bbox_head.regress_by_class(rois_r, bbox_label, bbox_pred,
-                                                          img_meta[0])
+                        rois_r[:, 1] = rois[:, 1] + delta_r[:, 0] * scale * w
+                        rois_r[:, 2] = rois[:, 2] + delta_r[:, 1] * scale * h
+                        rois_r[:, 3] = rois[:, 3] + delta_r[:, 0] * scale * w
+                        rois_r[:, 4] = rois[:, 4] + delta_r[:, 1] * scale * h
+                        rois = bbox_head.regress_by_class(
+                            rois_r, bbox_label, bbox_pred, img_meta[0])
                     else:
-                        rois = bbox_head.regress_by_class(rois, bbox_label, bbox_pred,
-                                                          img_meta[0])
+                        rois = bbox_head.regress_by_class(
+                            rois, bbox_label, bbox_pred, img_meta[0])
 
             cls_score = sum(ms_scores) / float(len(ms_scores))
 
             if self.use_TSD[-1]:
-                w = rois[:,3]-rois[:,1]+1
-                h = rois[:,4]-rois[:,2]+1
+                w = rois[:, 3] - rois[:, 1] + 1
+                h = rois[:, 4] - rois[:, 2] + 1
                 scale = 0.1
-                rois_r = rois.new_zeros(rois.shape[0],rois.shape[1])
-                rois_r[:,0] = rois[:,0]
+                rois_r = rois.new_zeros(rois.shape[0], rois.shape[1])
+                rois_r[:, 0] = rois[:, 0]
                 delta_r = delta_r.to(dtype=rois_r.dtype)
-                rois_r[:,1] = rois[:,1]+delta_r[:,0]*scale*w
-                rois_r[:,2] = rois[:,2]+delta_r[:,1]*scale*h
-                rois_r[:,3] = rois[:,3]+delta_r[:,0]*scale*w
-                rois_r[:,4] = rois[:,4]+delta_r[:,1]*scale*h
+                rois_r[:, 1] = rois[:, 1] + delta_r[:, 0] * scale * w
+                rois_r[:, 2] = rois[:, 2] + delta_r[:, 1] * scale * h
+                rois_r[:, 3] = rois[:, 3] + delta_r[:, 0] * scale * w
+                rois_r[:, 4] = rois[:, 4] + delta_r[:, 1] * scale * h
                 bboxes, scores = self.bbox_head[-1].get_det_bboxes(
                     rois_r,
                     cls_score,

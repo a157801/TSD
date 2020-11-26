@@ -17,7 +17,6 @@ def smooth_l1_loss(pred, target, beta=1.0):
 
 @LOSSES.register_module
 class SmoothL1Loss(nn.Module):
-
     def __init__(self, beta=1.0, reduction='mean', loss_weight=1.0):
         super(SmoothL1Loss, self).__init__()
         self.beta = beta
@@ -32,14 +31,13 @@ class SmoothL1Loss(nn.Module):
                 reduction_override=None,
                 **kwargs):
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss_bbox = self.loss_weight * smooth_l1_loss(
-            pred,
-            target,
-            weight,
-            beta=self.beta,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+        loss_bbox = self.loss_weight * smooth_l1_loss(pred,
+                                                      target,
+                                                      weight,
+                                                      beta=self.beta,
+                                                      reduction=reduction,
+                                                      avg_factor=avg_factor,
+                                                      **kwargs)
         return loss_bbox

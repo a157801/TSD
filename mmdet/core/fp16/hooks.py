@@ -23,7 +23,6 @@ class Fp16OptimizerHook(OptimizerHook):
     Args:
         loss_scale (float): Scale factor multiplied with loss.
     """
-
     def __init__(self,
                  grad_clip=None,
                  coalesce=True,
@@ -117,7 +116,6 @@ def patch_forward_method(func, src_type, dst_type, convert_output=True):
     Returns:
         callable: The patched forward method.
     """
-
     def new_forward(*args, **kwargs):
         output = func(*cast_tensor_type(args, src_type, dst_type),
                       **cast_tensor_type(kwargs, src_type, dst_type))

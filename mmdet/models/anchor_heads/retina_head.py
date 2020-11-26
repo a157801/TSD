@@ -3,6 +3,7 @@ import torch.nn as nn
 from mmcv.cnn import normal_init
 
 from mmdet.ops import ConvModule
+
 from ..registry import HEADS
 from ..utils import bias_init_with_prob
 from .anchor_head import AnchorHead
@@ -30,7 +31,6 @@ class RetinaHead(AnchorHead):
         >>> assert cls_per_anchor == (self.num_classes - 1)
         >>> assert box_per_anchor == 4
     """
-
     def __init__(self,
                  num_classes,
                  in_channels,
@@ -48,8 +48,10 @@ class RetinaHead(AnchorHead):
         octave_scales = np.array(
             [2**(i / scales_per_octave) for i in range(scales_per_octave)])
         anchor_scales = octave_scales * octave_base_scale
-        super(RetinaHead, self).__init__(
-            num_classes, in_channels, anchor_scales=anchor_scales, **kwargs)
+        super(RetinaHead, self).__init__(num_classes,
+                                         in_channels,
+                                         anchor_scales=anchor_scales,
+                                         **kwargs)
 
     def _init_layers(self):
         self.relu = nn.ReLU(inplace=True)
@@ -58,30 +60,29 @@ class RetinaHead(AnchorHead):
         for i in range(self.stacked_convs):
             chn = self.in_channels if i == 0 else self.feat_channels
             self.cls_convs.append(
-                ConvModule(
-                    chn,
-                    self.feat_channels,
-                    3,
-                    stride=1,
-                    padding=1,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg))
+                ConvModule(chn,
+                           self.feat_channels,
+                           3,
+                           stride=1,
+                           padding=1,
+                           conv_cfg=self.conv_cfg,
+                           norm_cfg=self.norm_cfg))
             self.reg_convs.append(
-                ConvModule(
-                    chn,
-                    self.feat_channels,
-                    3,
-                    stride=1,
-                    padding=1,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg))
-        self.retina_cls = nn.Conv2d(
-            self.feat_channels,
-            self.num_anchors * self.cls_out_channels,
-            3,
-            padding=1)
-        self.retina_reg = nn.Conv2d(
-            self.feat_channels, self.num_anchors * 4, 3, padding=1)
+                ConvModule(chn,
+                           self.feat_channels,
+                           3,
+                           stride=1,
+                           padding=1,
+                           conv_cfg=self.conv_cfg,
+                           norm_cfg=self.norm_cfg))
+        self.retina_cls = nn.Conv2d(self.feat_channels,
+                                    self.num_anchors * self.cls_out_channels,
+                                    3,
+                                    padding=1)
+        self.retina_reg = nn.Conv2d(self.feat_channels,
+                                    self.num_anchors * 4,
+                                    3,
+                                    padding=1)
 
     def init_weights(self):
         for m in self.cls_convs:

@@ -5,6 +5,7 @@ from mmcv.cnn.weight_init import caffe2_xavier_init
 from torch.utils.checkpoint import checkpoint
 
 from mmdet.ops import ConvModule
+
 from ..registry import NECKS
 
 
@@ -26,7 +27,6 @@ class HRFPN(nn.Module):
             memory while slowing down the training speed.
         stride (int): stride of 3x3 convolutional layers
     """
-
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -46,24 +46,22 @@ class HRFPN(nn.Module):
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
 
-        self.reduction_conv = ConvModule(
-            sum(in_channels),
-            out_channels,
-            kernel_size=1,
-            conv_cfg=self.conv_cfg,
-            act_cfg=None)
+        self.reduction_conv = ConvModule(sum(in_channels),
+                                         out_channels,
+                                         kernel_size=1,
+                                         conv_cfg=self.conv_cfg,
+                                         act_cfg=None)
 
         self.fpn_convs = nn.ModuleList()
         for i in range(self.num_outs):
             self.fpn_convs.append(
-                ConvModule(
-                    out_channels,
-                    out_channels,
-                    kernel_size=3,
-                    padding=1,
-                    stride=stride,
-                    conv_cfg=self.conv_cfg,
-                    act_cfg=None))
+                ConvModule(out_channels,
+                           out_channels,
+                           kernel_size=3,
+                           padding=1,
+                           stride=stride,
+                           conv_cfg=self.conv_cfg,
+                           act_cfg=None))
 
         if pooling_type == 'MAX':
             self.pooling = F.max_pool2d

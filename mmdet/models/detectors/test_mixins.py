@@ -18,9 +18,9 @@ class RPNTestMixin(object):
 
         async def async_test_rpn(self, x, img_metas, rpn_test_cfg):
             sleep_interval = rpn_test_cfg.pop('async_sleep_interval', 0.025)
-            async with completed(
-                    __name__, 'rpn_head_forward',
-                    sleep_interval=sleep_interval):
+            async with completed(__name__,
+                                 'rpn_head_forward',
+                                 sleep_interval=sleep_interval):
                 rpn_outs = self.rpn_head(x)
 
             proposal_inputs = rpn_outs + (img_metas, rpn_test_cfg)
@@ -77,9 +77,9 @@ class BBoxTestMixin(object):
                 roi_feats = self.shared_head(roi_feats)
             sleep_interval = rcnn_test_cfg.get('async_sleep_interval', 0.017)
 
-            async with completed(
-                    __name__, 'bbox_head_forward',
-                    sleep_interval=sleep_interval):
+            async with completed(__name__,
+                                 'bbox_head_forward',
+                                 sleep_interval=sleep_interval):
                 cls_score, bbox_pred = self.bbox_head(roi_feats)
 
             img_shape = img_metas[0]['img_shape']
@@ -137,14 +137,13 @@ class BBoxTestMixin(object):
             if self.with_shared_head:
                 roi_feats = self.shared_head(roi_feats)
             cls_score, bbox_pred = self.bbox_head(roi_feats)
-            bboxes, scores = self.bbox_head.get_det_bboxes(
-                rois,
-                cls_score,
-                bbox_pred,
-                img_shape,
-                scale_factor,
-                rescale=False,
-                cfg=None)
+            bboxes, scores = self.bbox_head.get_det_bboxes(rois,
+                                                           cls_score,
+                                                           bbox_pred,
+                                                           img_shape,
+                                                           scale_factor,
+                                                           rescale=False,
+                                                           cfg=None)
             aug_bboxes.append(bboxes)
             aug_scores.append(scores)
         # after merging, bboxes will be rescaled to the original image size
@@ -175,9 +174,8 @@ class MaskTestMixin(object):
                 segm_result = [[]
                                for _ in range(self.mask_head.num_classes - 1)]
             else:
-                _bboxes = (
-                    det_bboxes[:, :4] *
-                    scale_factor if rescale else det_bboxes)
+                _bboxes = (det_bboxes[:, :4] *
+                           scale_factor if rescale else det_bboxes)
                 mask_rois = bbox2roi([_bboxes])
                 mask_feats = self.mask_roi_extractor(
                     x[:len(self.mask_roi_extractor.featmap_strides)],
@@ -189,10 +187,9 @@ class MaskTestMixin(object):
                     sleep_interval = mask_test_cfg['async_sleep_interval']
                 else:
                     sleep_interval = 0.035
-                async with completed(
-                        __name__,
-                        'mask_head_forward',
-                        sleep_interval=sleep_interval):
+                async with completed(__name__,
+                                     'mask_head_forward',
+                                     sleep_interval=sleep_interval):
                     mask_pred = self.mask_head(mask_feats)
                 segm_result = self.mask_head.get_seg_masks(
                     mask_pred, _bboxes, det_labels, self.test_cfg.rcnn,
@@ -216,8 +213,8 @@ class MaskTestMixin(object):
             if rescale and not isinstance(scale_factor, float):
                 scale_factor = torch.from_numpy(scale_factor).to(
                     det_bboxes.device)
-            _bboxes = (
-                det_bboxes[:, :4] * scale_factor if rescale else det_bboxes)
+            _bboxes = (det_bboxes[:, :4] *
+                       scale_factor if rescale else det_bboxes)
             mask_rois = bbox2roi([_bboxes])
             mask_feats = self.mask_roi_extractor(
                 x[:len(self.mask_roi_extractor.featmap_strides)], mask_rois)
@@ -255,12 +252,11 @@ class MaskTestMixin(object):
                                            self.test_cfg.rcnn)
 
             ori_shape = img_metas[0][0]['ori_shape']
-            segm_result = self.mask_head.get_seg_masks(
-                merged_masks,
-                det_bboxes,
-                det_labels,
-                self.test_cfg.rcnn,
-                ori_shape,
-                scale_factor=1.0,
-                rescale=False)
+            segm_result = self.mask_head.get_seg_masks(merged_masks,
+                                                       det_bboxes,
+                                                       det_labels,
+                                                       self.test_cfg.rcnn,
+                                                       ori_shape,
+                                                       scale_factor=1.0,
+                                                       rescale=False)
         return segm_result

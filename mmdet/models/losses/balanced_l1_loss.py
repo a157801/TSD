@@ -32,7 +32,6 @@ class BalancedL1Loss(nn.Module):
 
     arXiv: https://arxiv.org/pdf/1904.02701.pdf (CVPR 2019)
     """
-
     def __init__(self,
                  alpha=0.5,
                  gamma=1.5,
@@ -54,16 +53,15 @@ class BalancedL1Loss(nn.Module):
                 reduction_override=None,
                 **kwargs):
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss_bbox = self.loss_weight * balanced_l1_loss(
-            pred,
-            target,
-            weight,
-            alpha=self.alpha,
-            gamma=self.gamma,
-            beta=self.beta,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+        loss_bbox = self.loss_weight * balanced_l1_loss(pred,
+                                                        target,
+                                                        weight,
+                                                        alpha=self.alpha,
+                                                        gamma=self.gamma,
+                                                        beta=self.beta,
+                                                        reduction=reduction,
+                                                        avg_factor=avg_factor,
+                                                        **kwargs)
         return loss_bbox

@@ -61,16 +61,19 @@ def parse_args():
         description='MMDet pytorch model conversion to ONNX')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
-    parser.add_argument(
-        '--out', type=str, required=True, help='output ONNX filename')
-    parser.add_argument(
-        '--shape',
-        type=int,
-        nargs='+',
-        default=[1280, 800],
-        help='input image size')
-    parser.add_argument(
-        '--passes', type=str, nargs='+', help='ONNX optimization passes')
+    parser.add_argument('--out',
+                        type=str,
+                        required=True,
+                        help='output ONNX filename')
+    parser.add_argument('--shape',
+                        type=int,
+                        nargs='+',
+                        default=[1280, 800],
+                        help='input image size')
+    parser.add_argument('--passes',
+                        type=str,
+                        nargs='+',
+                        help='ONNX optimization passes')
     args = parser.parse_args()
     return args
 

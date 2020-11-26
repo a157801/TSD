@@ -44,17 +44,17 @@ def point_target(proposals_list,
     if gt_labels_list is None:
         gt_labels_list = [None for _ in range(num_imgs)]
     (all_labels, all_label_weights, all_bbox_gt, all_proposals,
-     all_proposal_weights, pos_inds_list, neg_inds_list) = multi_apply(
-         point_target_single,
-         proposals_list,
-         valid_flag_list,
-         gt_bboxes_list,
-         gt_bboxes_ignore_list,
-         gt_labels_list,
-         cfg=cfg,
-         label_channels=label_channels,
-         sampling=sampling,
-         unmap_outputs=unmap_outputs)
+     all_proposal_weights, pos_inds_list,
+     neg_inds_list) = multi_apply(point_target_single,
+                                  proposals_list,
+                                  valid_flag_list,
+                                  gt_bboxes_list,
+                                  gt_bboxes_ignore_list,
+                                  gt_labels_list,
+                                  cfg=cfg,
+                                  label_channels=label_channels,
+                                  sampling=sampling,
+                                  unmap_outputs=unmap_outputs)
     # no valid points
     if any([labels is None for labels in all_labels]):
         return None

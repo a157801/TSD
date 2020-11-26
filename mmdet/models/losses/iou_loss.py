@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from mmdet.core import bbox_overlaps
+
 from ..registry import LOSSES
 from .utils import weighted_loss
 
@@ -116,7 +117,6 @@ def giou_loss(pred, target, eps=1e-7):
 
 @LOSSES.register_module
 class IoULoss(nn.Module):
-
     def __init__(self, eps=1e-6, reduction='mean', loss_weight=1.0):
         super(IoULoss, self).__init__()
         self.eps = eps
@@ -133,22 +133,20 @@ class IoULoss(nn.Module):
         if weight is not None and not torch.any(weight > 0):
             return (pred * weight).sum()  # 0
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss = self.loss_weight * iou_loss(
-            pred,
-            target,
-            weight,
-            eps=self.eps,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+        loss = self.loss_weight * iou_loss(pred,
+                                           target,
+                                           weight,
+                                           eps=self.eps,
+                                           reduction=reduction,
+                                           avg_factor=avg_factor,
+                                           **kwargs)
         return loss
 
 
 @LOSSES.register_module
 class BoundedIoULoss(nn.Module):
-
     def __init__(self, beta=0.2, eps=1e-3, reduction='mean', loss_weight=1.0):
         super(BoundedIoULoss, self).__init__()
         self.beta = beta
@@ -166,23 +164,21 @@ class BoundedIoULoss(nn.Module):
         if weight is not None and not torch.any(weight > 0):
             return (pred * weight).sum()  # 0
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss = self.loss_weight * bounded_iou_loss(
-            pred,
-            target,
-            weight,
-            beta=self.beta,
-            eps=self.eps,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+        loss = self.loss_weight * bounded_iou_loss(pred,
+                                                   target,
+                                                   weight,
+                                                   beta=self.beta,
+                                                   eps=self.eps,
+                                                   reduction=reduction,
+                                                   avg_factor=avg_factor,
+                                                   **kwargs)
         return loss
 
 
 @LOSSES.register_module
 class GIoULoss(nn.Module):
-
     def __init__(self, eps=1e-6, reduction='mean', loss_weight=1.0):
         super(GIoULoss, self).__init__()
         self.eps = eps
@@ -199,14 +195,13 @@ class GIoULoss(nn.Module):
         if weight is not None and not torch.any(weight > 0):
             return (pred * weight).sum()  # 0
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss = self.loss_weight * giou_loss(
-            pred,
-            target,
-            weight,
-            eps=self.eps,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+        loss = self.loss_weight * giou_loss(pred,
+                                            target,
+                                            weight,
+                                            eps=self.eps,
+                                            reduction=reduction,
+                                            avg_factor=avg_factor,
+                                            **kwargs)
         return loss

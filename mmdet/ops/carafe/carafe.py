@@ -9,7 +9,6 @@ from . import carafe_cuda, carafe_naive_cuda
 
 
 class CARAFENaiveFunction(Function):
-
     @staticmethod
     def forward(ctx, features, masks, kernel_size, group_size, scale_factor):
         assert scale_factor >= 1
@@ -58,7 +57,6 @@ carafe_naive = CARAFENaiveFunction.apply
 
 
 class CARAFENaive(Module):
-
     def __init__(self, kernel_size, group_size, scale_factor):
         super(CARAFENaive, self).__init__()
 
@@ -74,7 +72,6 @@ class CARAFENaive(Module):
 
 
 class CARAFEFunction(Function):
-
     @staticmethod
     def forward(ctx, features, masks, kernel_size, group_size, scale_factor):
         assert scale_factor >= 1
@@ -143,7 +140,6 @@ class CARAFE(Module):
     Returns:
         upsampled feature map
     """
-
     def __init__(self, kernel_size, group_size, scale_factor):
         super(CARAFE, self).__init__()
 
@@ -178,7 +174,6 @@ class CARAFEPack(nn.Module):
     Returns:
         upsampled feature map
     """
-
     def __init__(self,
                  channels,
                  scale_factor,

@@ -5,6 +5,7 @@ from mmcv.cnn import kaiming_init, normal_init
 from torch.nn.modules.utils import _pair
 
 from mmdet.core import force_fp32
+
 from ..builder import build_loss
 from ..registry import HEADS
 
@@ -15,7 +16,6 @@ class MaskIoUHead(nn.Module):
 
     This head predicts the IoU of predicted masks and corresponding gt masks.
     """
-
     def __init__(self,
                  num_convs=4,
                  num_fcs=2,
@@ -41,20 +41,18 @@ class MaskIoUHead(nn.Module):
                 in_channels = self.conv_out_channels
             stride = 2 if i == num_convs - 1 else 1
             self.convs.append(
-                nn.Conv2d(
-                    in_channels,
-                    self.conv_out_channels,
-                    3,
-                    stride=stride,
-                    padding=1))
+                nn.Conv2d(in_channels,
+                          self.conv_out_channels,
+                          3,
+                          stride=stride,
+                          padding=1))
 
         roi_feat_size = _pair(roi_feat_size)
         pooled_area = (roi_feat_size[0] // 2) * (roi_feat_size[1] // 2)
         self.fcs = nn.ModuleList()
         for i in range(num_fcs):
-            in_channels = (
-                self.conv_out_channels *
-                pooled_area if i == 0 else self.fc_out_channels)
+            in_channels = (self.conv_out_channels *
+                           pooled_area if i == 0 else self.fc_out_channels)
             self.fcs.append(nn.Linear(in_channels, self.fc_out_channels))
 
         self.fc_mask_iou = nn.Linear(self.fc_out_channels, self.num_classes)
@@ -66,12 +64,11 @@ class MaskIoUHead(nn.Module):
         for conv in self.convs:
             kaiming_init(conv)
         for fc in self.fcs:
-            kaiming_init(
-                fc,
-                a=1,
-                mode='fan_in',
-                nonlinearity='leaky_relu',
-                distribution='uniform')
+            kaiming_init(fc,
+                         a=1,
+                         mode='fan_in',
+                         nonlinearity='leaky_relu',
+                         distribution='uniform')
         normal_init(self.fc_mask_iou, std=0.01)
 
     def forward(self, mask_feat, mask_pred):
@@ -144,8 +141,8 @@ class MaskIoUHead(nn.Module):
         # compute the mask area of the whole instance
         gt_full_areas = mask_targets.sum((-1, -2)) / (area_ratios + 1e-7)
 
-        mask_iou_targets = overlap_areas / (
-            mask_pred_areas + gt_full_areas - overlap_areas)
+        mask_iou_targets = overlap_areas / (mask_pred_areas + gt_full_areas -
+                                            overlap_areas)
         return mask_iou_targets
 
     def _get_area_ratio(self, pos_proposals, pos_assigned_gt_inds, gt_masks):

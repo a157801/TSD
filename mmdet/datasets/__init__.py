@@ -1,9 +1,9 @@
 from .builder import build_dataloader, build_dataset
 from .cityscapes import CityscapesDataset
 from .coco import CocoDataset
-from .openimages_dataset import OpenImagesDataset
 from .custom import CustomDataset
 from .dataset_wrappers import ConcatDataset, RepeatDataset
+from .openimages_dataset import OpenImagesDataset
 from .registry import DATASETS
 from .samplers import DistributedGroupSampler, DistributedSampler, GroupSampler
 from .voc import VOCDataset

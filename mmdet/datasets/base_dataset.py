@@ -1,36 +1,34 @@
 from __future__ import division
+
 import json
 import logging
 import numbers
-import random
 import os
-import cv2
 import os.path as op
+import random
 
+import cv2
 import numpy as np
+import torch
+import torchvision.transforms as transforms
 from PIL import Image
+from pod.utils.dist_helper import get_world_size
+from pycocotools import mask as mask_utils
+from torch.nn.modules.utils import _pair
+from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import functional as F
+from torchvision.transforms.functional import (adjust_brightness,
+                                               adjust_contrast, adjust_hue,
+                                               adjust_saturation)
+
+from ..utils.vis_helper import vis_one_image
+from . import transforms as T
+from .sampler import IterationBasedBatchSampler
 
 try:
     import accimage
 except ImportError:
     accimage = None
-
-import torch
-import torchvision.transforms as transforms
-from torch.nn.modules.utils import _pair
-from torchvision.transforms import functional as F
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from torchvision.transforms.functional import adjust_brightness
-from torchvision.transforms.functional import adjust_contrast
-from torchvision.transforms.functional import adjust_saturation
-from torchvision.transforms.functional import adjust_hue
-from pycocotools import mask as mask_utils
-
-from . import transforms as T
-from ..utils.vis_helper import vis_one_image
-from .sampler import IterationBasedBatchSampler
-from pod.utils.dist_helper import get_world_size
 
 logger = logging.getLogger('global')
 
@@ -45,9 +43,10 @@ class BaseDataLoader(DataLoader):
                  num_workers=0,
                  pin_memory=False,
                  drop_last=False):
-        super(BaseDataLoader, self).__init__(
-            dataset, batch_size, shuffle, sampler, batch_sampler, num_workers,
-            self._collate_fn, pin_memory, drop_last)
+        super(BaseDataLoader,
+              self).__init__(dataset, batch_size, shuffle, sampler,
+                             batch_sampler, num_workers, self._collate_fn,
+                             pin_memory, drop_last)
 
     def _collate_fn(self, batch):
         """
@@ -102,19 +101,21 @@ class BaseDataLoader(DataLoader):
         }
 
         output['gt_bboxes'] = gt_bboxes if gt_bboxes[0] is not None else None
-        output['gt_ignores'] = gt_ignores if gt_ignores[0] is not None else None
+        output[
+            'gt_ignores'] = gt_ignores if gt_ignores[0] is not None else None
         output['gt_keyps'] = gt_keyps if gt_keyps[0] is not None else None
         output['gt_masks'] = gt_masks if gt_masks[0] is not None else None
         output['gt_grids'] = gt_grids if gt_grids[0] is not None else None
-        
+
         # Add for OpenImage
         gt_neg_labels = [_.get('neg_labels', None) for _ in batch]
-        output['neg_labels'] = gt_neg_labels if gt_neg_labels[0] is not None else None
+        output['neg_labels'] = gt_neg_labels if gt_neg_labels[
+            0] is not None else None
         return output
 
     def get_data_size(self):
         if isinstance(self.batch_sampler, IterationBasedBatchSampler):
-            return len(self.batch_sampler.batch_sampler)   # training
+            return len(self.batch_sampler.batch_sampler)  # training
         return len(self.batch_sampler)
 
 
@@ -127,7 +128,6 @@ class BaseTransform(object):
         max_size (int): maximum length of the longer edge
         flip (bool): if True, flip the gts
     """
-
     def __init__(self, scales, max_size, flip, flip_p=0.5):
         self.scales = scales
         self.max_size = max_size
@@ -157,7 +157,8 @@ class BaseTransform(object):
         else:
             input['flipped'] = False
 
-        scale_factor = T.get_scale_factor(self.scales, self.max_size, height, width)
+        scale_factor = T.get_scale_factor(self.scales, self.max_size, height,
+                                          width)
         resized_img = T.resize_image(img, scale_factor)
         input['scale_factor'] = scale_factor
         input['image'] = resized_img
@@ -182,7 +183,6 @@ class CaffeCocoTransform(object):
         max_size (int): maximum length of the longer edge
         flip (bool): if True, flip the gts
     """
-
     def __init__(self, scales, max_size, flip, flip_p=0.5):
         self.scales = scales
         self.max_size = max_size
@@ -199,9 +199,11 @@ class CaffeCocoTransform(object):
 
         # PIL.Image
         origin_width, origin_height = img.size
-        scale_h, scale_w = T.get_scale_factor_v2(self.scales, self.max_size, origin_height, origin_width)
+        scale_h, scale_w = T.get_scale_factor_v2(self.scales, self.max_size,
+                                                 origin_height, origin_width)
         scale_factor = (scale_h, scale_w)
-        resized_height, resized_width = (round(scale_h * origin_height), round(scale_w * origin_width))
+        resized_height, resized_width = (round(scale_h * origin_height),
+                                         round(scale_w * origin_width))
         img = F.resize(img, (resized_height, resized_width))
 
         if gt_bboxes is not None:
@@ -251,7 +253,6 @@ class BaseDataset(Dataset):
     4. dump to output results, Required
     5. visualize gts or dts to check annotations, Optional
     """
-
     def __init__(self):
         """
         """
@@ -296,7 +297,9 @@ class BaseDataset(Dataset):
         grids[:, 0::3, 1] = np.tile(y1, (3, 1)).transpose()
         grids[:, 1::3, 1] = np.tile((y1 + y2) / 2, (3, 1)).transpose()
         grids[:, 2::3, 1] = np.tile(y2, (3, 1)).transpose()
-        grids = np.hstack([grids.reshape(-1, 2), np.ones([N * num_box_kpt, 1])])
+        grids = np.hstack(
+            [grids.reshape(-1, 2),
+             np.ones([N * num_box_kpt, 1])])
         grids = grids.reshape(N, num_box_kpt, 3)
 
         return grids
@@ -342,12 +345,12 @@ class BaseDataset(Dataset):
             for bbox in img_bboxes:
                 res = {
                     'image_id': img_id,
-                    'bbox': bbox[1: 1 + 4].tolist(),
+                    'bbox': bbox[1:1 + 4].tolist(),
                     'score': float(bbox[5]),
                     'label': int(bbox[6])
                 }
                 dump_results.append(json.dumps(res, ensure_ascii=False))
-        writer.write("\n".join(dump_results) + '\n')
+        writer.write('\n'.join(dump_results) + '\n')
         writer.flush()
 
     def merge(self, prefix):
@@ -363,7 +366,8 @@ class BaseDataset(Dataset):
         merged_fd = open(merged_file, 'w')
         for rank in range(world_size):
             res_file = prefix + str(rank)
-            assert op.exists(res_file), f'No such file or directory: {res_file}'
+            assert op.exists(
+                res_file), f'No such file or directory: {res_file}'
             with open(res_file, 'r') as fin:
                 for line_idx, line in enumerate(fin):
                     merged_fd.write(line)
@@ -404,7 +408,6 @@ class BaseDataset(Dataset):
             - input (:obj:`dict`): output of model
 
         """
-
         def poly_to_mask(polygons, height, width):
             rles = mask_utils.frPyObjects(polygons, height, width)
             rle = mask_utils.merge(rles)
@@ -425,7 +428,8 @@ class BaseDataset(Dataset):
             gt_masks = []
             for b_ix, polys in enumerate(input['gt_masks']):
                 height, width = gt_images[b_ix].shape[:2]
-                masks = np.array([poly_to_mask(_, height, width) for _ in polys])
+                masks = np.array(
+                    [poly_to_mask(_, height, width) for _ in polys])
                 gt_masks.append(masks)
 
         batch_size = len(filenames)
@@ -540,26 +544,39 @@ class RandomColorJitter(object):
             hue_factor is chosen uniformly from [-hue, hue] or the given [min, max].
             Should have 0<= hue <= 0.5 or -0.5 <= min <= max <= 0.5.
     """
-
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, prob=0):
         self.brightness = self._check_input(brightness, 'brightness')
         self.contrast = self._check_input(contrast, 'contrast')
         self.saturation = self._check_input(saturation, 'saturation')
-        self.hue = self._check_input(hue, 'hue', center=0, bound=(-0.5, 0.5), clip_first_on_zero=False)
+        self.hue = self._check_input(hue,
+                                     'hue',
+                                     center=0,
+                                     bound=(-0.5, 0.5),
+                                     clip_first_on_zero=False)
         self.prob = prob
 
-    def _check_input(self, value, name, center=1, bound=(0, float('inf')), clip_first_on_zero=True):
+    def _check_input(self,
+                     value,
+                     name,
+                     center=1,
+                     bound=(0, float('inf')),
+                     clip_first_on_zero=True):
         if isinstance(value, numbers.Number):
             if value < 0:
-                raise ValueError("If {} is a single number, it must be non negative.".format(name))
+                raise ValueError(
+                    'If {} is a single number, it must be non negative.'.
+                    format(name))
             value = [center - value, center + value]
             if clip_first_on_zero:
                 value[0] = max(value[0], 0)
         elif isinstance(value, (tuple, list)) and len(value) == 2:
             if not bound[0] <= value[0] <= value[1] <= bound[1]:
-                raise ValueError("{} values should be between {}".format(name, bound))
+                raise ValueError('{} values should be between {}'.format(
+                    name, bound))
         else:
-            raise TypeError("{} should be a single number or a list/tuple with lenght 2.".format(name))
+            raise TypeError(
+                '{} should be a single number or a list/tuple with lenght 2.'.
+                format(name))
 
         # if value is 0 or (1., 1.) for brightness/contrast/saturation
         # or (0., 0.) for hue, do nothing
@@ -581,19 +598,26 @@ class RandomColorJitter(object):
 
         if brightness is not None and random.random() < self.prob:
             brightness_factor = random.uniform(brightness[0], brightness[1])
-            img_transforms.append(transforms.Lambda(lambda img: adjust_brightness(img, brightness_factor)))
+            img_transforms.append(
+                transforms.Lambda(
+                    lambda img: adjust_brightness(img, brightness_factor)))
 
         if contrast is not None and random.random() < self.prob:
             contrast_factor = random.uniform(contrast[0], contrast[1])
-            img_transforms.append(transforms.Lambda(lambda img: adjust_contrast(img, contrast_factor)))
+            img_transforms.append(
+                transforms.Lambda(
+                    lambda img: adjust_contrast(img, contrast_factor)))
 
         if saturation is not None and random.random() < self.prob:
             saturation_factor = random.uniform(saturation[0], saturation[1])
-            img_transforms.append(transforms.Lambda(lambda img: adjust_saturation(img, saturation_factor)))
+            img_transforms.append(
+                transforms.Lambda(
+                    lambda img: adjust_saturation(img, saturation_factor)))
 
         if hue is not None and random.random() < self.prob:
             hue_factor = random.uniform(hue[0], hue[1])
-            img_transforms.append(transforms.Lambda(lambda img: adjust_hue(img, hue_factor)))
+            img_transforms.append(
+                transforms.Lambda(lambda img: adjust_hue(img, hue_factor)))
 
         random.shuffle(img_transforms)
         img_transforms = transforms.Compose(img_transforms)
@@ -629,4 +653,8 @@ class RandomColorJitter(object):
         hue = params.get('hue', 0.07)
         saturation = params.get('saturation', 0.5)
         prob = params.get('prob', 0.25)
-        return cls(brightness=brightness, contrast=contrast, hue=hue, saturation=saturation, prob=prob)
+        return cls(brightness=brightness,
+                   contrast=contrast,
+                   hue=hue,
+                   saturation=saturation,
+                   prob=prob)

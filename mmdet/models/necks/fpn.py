@@ -4,6 +4,7 @@ from mmcv.cnn import xavier_init
 
 from mmdet.core import auto_fp16
 from mmdet.ops import ConvModule
+
 from ..registry import NECKS
 
 
@@ -46,7 +47,6 @@ class FPN(nn.Module):
         outputs[2].shape = torch.Size([1, 11, 84, 84])
         outputs[3].shape = torch.Size([1, 11, 43, 43])
     """
-
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -95,15 +95,14 @@ class FPN(nn.Module):
                 norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
                 act_cfg=act_cfg,
                 inplace=False)
-            fpn_conv = ConvModule(
-                out_channels,
-                out_channels,
-                3,
-                padding=1,
-                conv_cfg=conv_cfg,
-                norm_cfg=norm_cfg,
-                act_cfg=act_cfg,
-                inplace=False)
+            fpn_conv = ConvModule(out_channels,
+                                  out_channels,
+                                  3,
+                                  padding=1,
+                                  conv_cfg=conv_cfg,
+                                  norm_cfg=norm_cfg,
+                                  act_cfg=act_cfg,
+                                  inplace=False)
 
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
@@ -116,16 +115,15 @@ class FPN(nn.Module):
                     in_channels = self.in_channels[self.backbone_end_level - 1]
                 else:
                     in_channels = out_channels
-                extra_fpn_conv = ConvModule(
-                    in_channels,
-                    out_channels,
-                    3,
-                    stride=2,
-                    padding=1,
-                    conv_cfg=conv_cfg,
-                    norm_cfg=norm_cfg,
-                    act_cfg=act_cfg,
-                    inplace=False)
+                extra_fpn_conv = ConvModule(in_channels,
+                                            out_channels,
+                                            3,
+                                            stride=2,
+                                            padding=1,
+                                            conv_cfg=conv_cfg,
+                                            norm_cfg=norm_cfg,
+                                            act_cfg=act_cfg,
+                                            inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
 
     # default init_weights for conv(msra) and norm in ConvModule
@@ -148,8 +146,9 @@ class FPN(nn.Module):
         used_backbone_levels = len(laterals)
         for i in range(used_backbone_levels - 1, 0, -1):
             prev_shape = laterals[i - 1].shape[2:]
-            laterals[i - 1] += F.interpolate(
-                laterals[i], size=prev_shape, mode='nearest')
+            laterals[i - 1] += F.interpolate(laterals[i],
+                                             size=prev_shape,
+                                             mode='nearest')
 
         # build outputs
         # part 1: from original levels

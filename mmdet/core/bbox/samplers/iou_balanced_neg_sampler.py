@@ -23,7 +23,6 @@ class IoUBalancedNegSampler(RandomSampler):
         floor_fraction (float): sampling fraction of proposals under floor_thr.
         num_bins (int): number of bins in IoU balanced sampling.
     """
-
     def __init__(self,
                  num,
                  pos_fraction,
@@ -114,8 +113,8 @@ class IoUBalancedNegSampler(RandomSampler):
                     iou_sampled_inds = self.random_choice(
                         iou_sampling_neg_inds, num_expected_iou_sampling)
             else:
-                iou_sampled_inds = np.array(
-                    iou_sampling_neg_inds, dtype=np.int)
+                iou_sampled_inds = np.array(iou_sampling_neg_inds,
+                                            dtype=np.int)
             num_expected_floor = num_expected - len(iou_sampled_inds)
             if len(floor_neg_inds) > num_expected_floor:
                 sampled_floor_inds = self.random_choice(

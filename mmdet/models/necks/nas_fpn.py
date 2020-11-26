@@ -3,22 +3,21 @@ import torch.nn.functional as F
 from mmcv.cnn import caffe2_xavier_init
 
 from mmdet.ops import ConvModule
+
 from ..registry import NECKS
 
 
 class MergingCell(nn.Module):
-
     def __init__(self, channels=256, with_conv=True, norm_cfg=None):
         super(MergingCell, self).__init__()
         self.with_conv = with_conv
         if self.with_conv:
-            self.conv_out = ConvModule(
-                channels,
-                channels,
-                3,
-                padding=1,
-                norm_cfg=norm_cfg,
-                order=('act', 'conv', 'norm'))
+            self.conv_out = ConvModule(channels,
+                                       channels,
+                                       3,
+                                       padding=1,
+                                       norm_cfg=norm_cfg,
+                                       order=('act', 'conv', 'norm'))
 
     def _binary_op(self, x1, x2):
         raise NotImplementedError
@@ -48,13 +47,11 @@ class MergingCell(nn.Module):
 
 
 class SumCell(MergingCell):
-
     def _binary_op(self, x1, x2):
         return x1 + x2
 
 
 class GPCell(MergingCell):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -71,7 +68,6 @@ class NASFPN(nn.Module):
     NAS-FPN: Learning Scalable Feature Pyramid Architecture for Object
     Detection. (https://arxiv.org/abs/1904.07392)
     """
-
     def __init__(self,
                  in_channels,
                  out_channels,
@@ -105,20 +101,22 @@ class NASFPN(nn.Module):
         # add lateral connections
         self.lateral_convs = nn.ModuleList()
         for i in range(self.start_level, self.backbone_end_level):
-            l_conv = ConvModule(
-                in_channels[i],
-                out_channels,
-                1,
-                norm_cfg=norm_cfg,
-                act_cfg=None)
+            l_conv = ConvModule(in_channels[i],
+                                out_channels,
+                                1,
+                                norm_cfg=norm_cfg,
+                                act_cfg=None)
             self.lateral_convs.append(l_conv)
 
         # add extra downsample layers (stride-2 pooling or conv)
         extra_levels = num_outs - self.backbone_end_level + self.start_level
         self.extra_downsamples = nn.ModuleList()
         for i in range(extra_levels):
-            extra_conv = ConvModule(
-                out_channels, out_channels, 1, norm_cfg=norm_cfg, act_cfg=None)
+            extra_conv = ConvModule(out_channels,
+                                    out_channels,
+                                    1,
+                                    norm_cfg=norm_cfg,
+                                    act_cfg=None)
             self.extra_downsamples.append(
                 nn.Sequential(extra_conv, nn.MaxPool2d(2, 2)))
 

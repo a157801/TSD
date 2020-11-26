@@ -3,7 +3,6 @@ from torch.utils.data import DistributedSampler as _DistributedSampler
 
 
 class DistributedSampler(_DistributedSampler):
-
     def __init__(self, dataset, num_replicas=None, rank=None, shuffle=True):
         super().__init__(dataset, num_replicas=num_replicas, rank=rank)
         self.shuffle = shuffle

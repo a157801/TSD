@@ -5,6 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from mmdet.core import eval_map, eval_recalls
+
 from .pipelines import Compose
 from .registry import DATASETS
 
@@ -193,20 +194,22 @@ class CustomDataset(Dataset):
         eval_results = {}
         if metric == 'mAP':
             assert isinstance(iou_thr, float)
-            mean_ap, _ = eval_map(
-                results,
-                annotations,
-                scale_ranges=scale_ranges,
-                iou_thr=iou_thr,
-                dataset=self.CLASSES,
-                logger=logger)
+            mean_ap, _ = eval_map(results,
+                                  annotations,
+                                  scale_ranges=scale_ranges,
+                                  iou_thr=iou_thr,
+                                  dataset=self.CLASSES,
+                                  logger=logger)
             eval_results['mAP'] = mean_ap
         elif metric == 'recall':
             gt_bboxes = [ann['bboxes'] for ann in annotations]
             if isinstance(iou_thr, float):
                 iou_thr = [iou_thr]
-            recalls = eval_recalls(
-                gt_bboxes, results, proposal_nums, iou_thr, logger=logger)
+            recalls = eval_recalls(gt_bboxes,
+                                   results,
+                                   proposal_nums,
+                                   iou_thr,
+                                   logger=logger)
             for i, num in enumerate(proposal_nums):
                 for j, iou in enumerate(iou_thr):
                     eval_results['recall@{}@{}'.format(num, iou)] = recalls[i,

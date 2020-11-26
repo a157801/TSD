@@ -2,13 +2,13 @@ import torch
 import torch.nn.functional as F
 
 from mmdet.core import bbox2delta, bbox_overlaps, delta2bbox
+
 from ..registry import HEADS
 from .retina_head import RetinaHead
 
 
 @HEADS.register_module
 class FreeAnchorRetinaHead(RetinaHead):
-
     def __init__(self,
                  num_classes,
                  in_channels,
@@ -48,8 +48,8 @@ class FreeAnchorRetinaHead(RetinaHead):
 
         # concatenate each level
         cls_scores = [
-            cls.permute(0, 2, 3,
-                        1).reshape(cls.size(0), -1, self.cls_out_channels)
+            cls.permute(0, 2, 3, 1).reshape(cls.size(0), -1,
+                                            self.cls_out_channels)
             for cls in cls_scores
         ]
         bbox_preds = [
@@ -99,8 +99,8 @@ class FreeAnchorRetinaHead(RetinaHead):
 
                 """
                 # start
-                box_cls_prob = torch.sparse.sum(
-                    object_cls_box_prob, dim=0).to_dense()
+                box_cls_prob = torch.sparse.sum(object_cls_box_prob,
+                                                dim=0).to_dense()
 
                 indices = torch.nonzero(box_cls_prob).t_()
                 if indices.numel() == 0:
@@ -126,11 +126,10 @@ class FreeAnchorRetinaHead(RetinaHead):
 
             # construct bags for objects
             match_quality_matrix = bbox_overlaps(gt_bboxes_, anchors_)
-            _, matched = torch.topk(
-                match_quality_matrix,
-                self.pre_anchor_topk,
-                dim=1,
-                sorted=False)
+            _, matched = torch.topk(match_quality_matrix,
+                                    self.pre_anchor_topk,
+                                    dim=1,
+                                    sorted=False)
             del match_quality_matrix
 
             # matched_cls_prob: P_{ij}^{cls}
@@ -145,10 +144,9 @@ class FreeAnchorRetinaHead(RetinaHead):
                 matched_anchors,
                 gt_bboxes_.unsqueeze(dim=1).expand_as(matched_anchors),
                 self.target_means, self.target_stds)
-            loss_bbox = self.loss_bbox(
-                bbox_preds_[matched],
-                matched_object_targets,
-                reduction_override='none').sum(-1)
+            loss_bbox = self.loss_bbox(bbox_preds_[matched],
+                                       matched_object_targets,
+                                       reduction_override='none').sum(-1)
             matched_box_prob = torch.exp(-loss_bbox)
 
             # positive_losses: {-log( Mean-max(P_{ij}^{cls} * P_{ij}^{loc}) )}

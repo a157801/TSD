@@ -11,7 +11,6 @@ from mmdet.utils import print_log
 
 class BaseDetector(nn.Module, metaclass=ABCMeta):
     """Base class for detectors"""
-
     def __init__(self):
         super(BaseDetector, self).__init__()
         self.fp16_enabled = False
@@ -180,8 +179,9 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 segms = mmcv.concat_list(segm_result)
                 inds = np.where(bboxes[:, -1] > score_thr)[0]
                 for i in inds:
-                    color_mask = np.random.randint(
-                        0, 256, (1, 3), dtype=np.uint8)
+                    color_mask = np.random.randint(0,
+                                                   256, (1, 3),
+                                                   dtype=np.uint8)
                     mask = maskUtils.decode(segms[i]).astype(np.bool)
                     img_show[mask] = img_show[mask] * 0.5 + color_mask * 0.5
             # draw bounding boxes
@@ -190,9 +190,8 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 for i, bbox in enumerate(bbox_result)
             ]
             labels = np.concatenate(labels)
-            mmcv.imshow_det_bboxes(
-                img_show,
-                bboxes,
-                labels,
-                class_names=class_names,
-                score_thr=score_thr)
+            mmcv.imshow_det_bboxes(img_show,
+                                   bboxes,
+                                   labels,
+                                   class_names=class_names,
+                                   score_thr=score_thr)

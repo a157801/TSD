@@ -5,13 +5,13 @@ import torch.nn.functional as F
 from mmcv.cnn import kaiming_init, normal_init
 
 from mmdet.ops import ConvModule
+
 from ..builder import build_loss
 from ..registry import HEADS
 
 
 @HEADS.register_module
 class GridHead(nn.Module):
-
     def __init__(self,
                  grid_points=9,
                  num_convs=8,
@@ -21,9 +21,9 @@ class GridHead(nn.Module):
                  point_feat_channels=64,
                  deconv_kernel_size=4,
                  class_agnostic=False,
-                 loss_grid=dict(
-                     type='CrossEntropyLoss', use_sigmoid=True,
-                     loss_weight=15),
+                 loss_grid=dict(type='CrossEntropyLoss',
+                                use_sigmoid=True,
+                                loss_weight=15),
                  conv_cfg=None,
                  norm_cfg=dict(type='GN', num_groups=36)):
         super(GridHead, self).__init__()
@@ -55,37 +55,36 @@ class GridHead(nn.Module):
 
         self.convs = []
         for i in range(self.num_convs):
-            in_channels = (
-                self.in_channels if i == 0 else self.conv_out_channels)
+            in_channels = (self.in_channels
+                           if i == 0 else self.conv_out_channels)
             stride = 2 if i == 0 else 1
             padding = (self.conv_kernel_size - 1) // 2
             self.convs.append(
-                ConvModule(
-                    in_channels,
-                    self.conv_out_channels,
-                    self.conv_kernel_size,
-                    stride=stride,
-                    padding=padding,
-                    conv_cfg=self.conv_cfg,
-                    norm_cfg=self.norm_cfg,
-                    bias=True))
+                ConvModule(in_channels,
+                           self.conv_out_channels,
+                           self.conv_kernel_size,
+                           stride=stride,
+                           padding=padding,
+                           conv_cfg=self.conv_cfg,
+                           norm_cfg=self.norm_cfg,
+                           bias=True))
         self.convs = nn.Sequential(*self.convs)
 
-        self.deconv1 = nn.ConvTranspose2d(
-            self.conv_out_channels,
-            self.conv_out_channels,
-            kernel_size=deconv_kernel_size,
-            stride=2,
-            padding=(deconv_kernel_size - 2) // 2,
-            groups=grid_points)
+        self.deconv1 = nn.ConvTranspose2d(self.conv_out_channels,
+                                          self.conv_out_channels,
+                                          kernel_size=deconv_kernel_size,
+                                          stride=2,
+                                          padding=(deconv_kernel_size - 2) //
+                                          2,
+                                          groups=grid_points)
         self.norm1 = nn.GroupNorm(grid_points, self.conv_out_channels)
-        self.deconv2 = nn.ConvTranspose2d(
-            self.conv_out_channels,
-            grid_points,
-            kernel_size=deconv_kernel_size,
-            stride=2,
-            padding=(deconv_kernel_size - 2) // 2,
-            groups=grid_points)
+        self.deconv2 = nn.ConvTranspose2d(self.conv_out_channels,
+                                          grid_points,
+                                          kernel_size=deconv_kernel_size,
+                                          stride=2,
+                                          padding=(deconv_kernel_size - 2) //
+                                          2,
+                                          groups=grid_points)
 
         # find the 4-neighbor of each grid point
         self.neighbor_points = []
@@ -115,24 +114,22 @@ class GridHead(nn.Module):
                 # 1x1 conv.
                 fo_trans.append(
                     nn.Sequential(
-                        nn.Conv2d(
-                            self.point_feat_channels,
-                            self.point_feat_channels,
-                            5,
-                            stride=1,
-                            padding=2,
-                            groups=self.point_feat_channels),
+                        nn.Conv2d(self.point_feat_channels,
+                                  self.point_feat_channels,
+                                  5,
+                                  stride=1,
+                                  padding=2,
+                                  groups=self.point_feat_channels),
                         nn.Conv2d(self.point_feat_channels,
                                   self.point_feat_channels, 1)))
                 so_trans.append(
                     nn.Sequential(
-                        nn.Conv2d(
-                            self.point_feat_channels,
-                            self.point_feat_channels,
-                            5,
-                            1,
-                            2,
-                            groups=self.point_feat_channels),
+                        nn.Conv2d(self.point_feat_channels,
+                                  self.point_feat_channels,
+                                  5,
+                                  1,
+                                  2,
+                                  groups=self.point_feat_channels),
                         nn.Conv2d(self.point_feat_channels,
                                   self.point_feat_channels, 1)))
             self.forder_trans.append(fo_trans)
@@ -341,17 +338,17 @@ class GridHead(nn.Module):
 
         # voting of all grid points on some boundary
         bboxes_x1 = (abs_xs[:, x1_inds] * pred_scores[:, x1_inds]).sum(
-            dim=1, keepdim=True) / (
-                pred_scores[:, x1_inds].sum(dim=1, keepdim=True))
+            dim=1, keepdim=True) / (pred_scores[:, x1_inds].sum(dim=1,
+                                                                keepdim=True))
         bboxes_y1 = (abs_ys[:, y1_inds] * pred_scores[:, y1_inds]).sum(
-            dim=1, keepdim=True) / (
-                pred_scores[:, y1_inds].sum(dim=1, keepdim=True))
+            dim=1, keepdim=True) / (pred_scores[:, y1_inds].sum(dim=1,
+                                                                keepdim=True))
         bboxes_x2 = (abs_xs[:, x2_inds] * pred_scores[:, x2_inds]).sum(
-            dim=1, keepdim=True) / (
-                pred_scores[:, x2_inds].sum(dim=1, keepdim=True))
+            dim=1, keepdim=True) / (pred_scores[:, x2_inds].sum(dim=1,
+                                                                keepdim=True))
         bboxes_y2 = (abs_ys[:, y2_inds] * pred_scores[:, y2_inds]).sum(
-            dim=1, keepdim=True) / (
-                pred_scores[:, y2_inds].sum(dim=1, keepdim=True))
+            dim=1, keepdim=True) / (pred_scores[:, y2_inds].sum(dim=1,
+                                                                keepdim=True))
 
         bbox_res = torch.cat(
             [bboxes_x1, bboxes_y1, bboxes_x2, bboxes_y2, cls_scores], dim=1)

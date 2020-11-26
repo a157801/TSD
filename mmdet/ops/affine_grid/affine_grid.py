@@ -7,7 +7,6 @@ from . import affine_grid_cuda
 
 
 class _AffineGridGenerator(Function):
-
     @staticmethod
     def forward(ctx, theta, size, align_corners):
 

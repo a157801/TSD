@@ -35,9 +35,7 @@ def auto_fp16(apply_to=None, out_fp32=False):
             def do_something(self, pred, others):
                 pass
     """
-
     def auto_fp16_wrapper(old_func):
-
         @functools.wraps(old_func)
         def new_func(*args, **kwargs):
             # check if the module has set the attribute `fp16_enabled`, if not,
@@ -113,9 +111,7 @@ def force_fp32(apply_to=None, out_fp16=False):
             def post_process(self, pred, others):
                 pass
     """
-
     def force_fp32_wrapper(old_func):
-
         @functools.wraps(old_func)
         def new_func(*args, **kwargs):
             # check if the module has set the attribute `fp16_enabled`, if not,

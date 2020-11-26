@@ -13,8 +13,10 @@ def cross_entropy(pred, label, weight=None, reduction='mean', avg_factor=None):
     # apply weights and do the reduction
     if weight is not None:
         weight = weight.float()
-    loss = weight_reduce_loss(
-        loss, weight=weight, reduction=reduction, avg_factor=avg_factor)
+    loss = weight_reduce_loss(loss,
+                              weight=weight,
+                              reduction=reduction,
+                              avg_factor=avg_factor)
 
     return loss
 
@@ -43,8 +45,10 @@ def binary_cross_entropy(pred,
     # weighted element-wise losses
     if weight is not None:
         weight = weight.float()
-    loss = F.binary_cross_entropy_with_logits(
-        pred, label.float(), weight, reduction='none')
+    loss = F.binary_cross_entropy_with_logits(pred,
+                                              label.float(),
+                                              weight,
+                                              reduction='none')
     # do the reduction for the weighted loss
     loss = weight_reduce_loss(loss, reduction=reduction, avg_factor=avg_factor)
 
@@ -57,13 +61,13 @@ def mask_cross_entropy(pred, target, label, reduction='mean', avg_factor=None):
     num_rois = pred.size()[0]
     inds = torch.arange(0, num_rois, dtype=torch.long, device=pred.device)
     pred_slice = pred[inds, label].squeeze(1)
-    return F.binary_cross_entropy_with_logits(
-        pred_slice, target, reduction='mean')[None]
+    return F.binary_cross_entropy_with_logits(pred_slice,
+                                              target,
+                                              reduction='mean')[None]
 
 
 @LOSSES.register_module
 class CrossEntropyLoss(nn.Module):
-
     def __init__(self,
                  use_sigmoid=False,
                  use_mask=False,
@@ -91,13 +95,12 @@ class CrossEntropyLoss(nn.Module):
                 reduction_override=None,
                 **kwargs):
         assert reduction_override in (None, 'none', 'mean', 'sum')
-        reduction = (
-            reduction_override if reduction_override else self.reduction)
-        loss_cls = self.loss_weight * self.cls_criterion(
-            cls_score,
-            label,
-            weight,
-            reduction=reduction,
-            avg_factor=avg_factor,
-            **kwargs)
+        reduction = (reduction_override
+                     if reduction_override else self.reduction)
+        loss_cls = self.loss_weight * self.cls_criterion(cls_score,
+                                                         label,
+                                                         weight,
+                                                         reduction=reduction,
+                                                         avg_factor=avg_factor,
+                                                         **kwargs)
         return loss_cls

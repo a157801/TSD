@@ -74,7 +74,6 @@ class NiceRepr(object):
         >>> baz = Baz()
         >>> assert str(baz) == '<Baz(5)>'
     """
-
     def __nice__(self):
         if hasattr(self, '__len__'):
             # It is a common pattern for objects to use __len__ in __nice__
