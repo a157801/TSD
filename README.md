@@ -105,10 +105,10 @@ We train the ResNext101-64x4d model with DCN and multi-scale training. Evaluatio
 ## Experiments on OpenImages Dataset
 
 For standard Faster RCNN
-| Backbone           | TSD   | AP              | Download |
-|:--------------------:|:-----:|:--------------:|:-------:|:--------:|
-| ResNet50           |       | 70.7     | [model](https://drive.google.com/file/d/1Nf7wNTKesjlZD1sanNmGJTPAVYzEiOGg/view?usp=sharing)|
-| ResNet50           | ✓     | **72.2**  | [model](https://drive.google.com/file/d/1yssanW8ny-nXDUijXaYXWrV6FxVSvZ9K/view?usp=sharing) |
+| Backbone           | TSD   | AP             | Download |
+|:------------------:|:-----:|:--------------:|:-------:|
+| ResNet50           |       | 70.7           | [model](https://drive.google.com/file/d/1Nf7wNTKesjlZD1sanNmGJTPAVYzEiOGg/view?usp=sharing)|
+| ResNet50           | ✓     | **72.2**       | [model](https://drive.google.com/file/d/1yssanW8ny-nXDUijXaYXWrV6FxVSvZ9K/view?usp=sharing)|
 
 
 ## Installation
