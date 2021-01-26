@@ -24,6 +24,8 @@ def parse_args():
     parser.add_argument(
         '--resume_from', help='the checkpoint file to resume from')
     parser.add_argument(
+        '--pretrain_model', help='the checkpoint file to resume from')
+    parser.add_argument(
         '--validate',
         action='store_true',
         help='whether to evaluate the checkpoint during training')
@@ -73,6 +75,8 @@ def main():
         cfg.work_dir = args.work_dir
     if args.resume_from is not None:
         cfg.resume_from = args.resume_from
+    if args.pretrain_model is not None:
+        cfg.pretrain_model = args.pretrain_model
     if args.gpu_ids is not None:
         cfg.gpu_ids = args.gpu_ids
     else:
